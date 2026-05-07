@@ -140,7 +140,7 @@ section { margin-bottom: 60px; }
 <!-- HERO -->
 <div class="hero">
   <h1>BenchMark Arena</h1>
-  <p class="subtitle">通过让 117 个主流 AI 模型在 158 个真实基准上展开系统性对抗评测，精准揭示基准的"好坏"&mdash;&mdash;哪些基准还能"分出高下"，哪些已沦为"记忆检测器"，哪些又是"被埋没的宝石"</p>
+  <p class="subtitle">基于 BHI 框架，BenchMark Arena 通过大规模系统性对抗评测，沿能力区分度、抗饱和度与影响力三个正交维度对 LLM 评测基准进行量化诊断，揭示基准的分辨效力、结构耐久性与生态采纳度。</p>
   <div class="badge-group">
     <span class="badge" style="border-color:#3182ce;color:#3182ce;">能力区分度</span>
     <span class="badge" style="border-color:#38a169;color:#38a169;">抗饱和度</span>
@@ -154,17 +154,17 @@ section { margin-bottom: 60px; }
 
 <!-- TAB NAV -->
 <div class="tab-nav">
-  <button class="tab-btn active" data-tab="conclusion">BHI指数排行榜</button>
-  <button class="tab-btn" data-tab="method">BHI指数计算方法</button>
+  <button class="tab-btn active" data-tab="conclusion">BHI 指数排行榜</button>
+  <button class="tab-btn" data-tab="method">BHI 指数计算方法</button>
 </div>
 
-<!-- TAB 1: BHI指数排行榜 -->
+<!-- TAB 1: BHI 指数排行榜 -->
 <div class="tab-panel active" id="panel-conclusion">
   <div class="container">
     <section>
       <div class="section-header">
         <div class="icon" style="background:linear-gradient(135deg,#2b6cb0,#805ad5);">&#x1F3C6;</div>
-        <h2>BHI 基准健康指数排行榜</h2>
+        <h2>BHI 指数排行榜</h2>
       </div>
       <p id="conclusionDesc" style="color:#4a5568;font-size:14px;line-height:1.8;margin:12px 0 20px;"></p>
 
@@ -174,9 +174,9 @@ section { margin-bottom: 60px; }
           <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
             <span style="font-size:28px;flex-shrink:0;">&#x1F4CA;</span>
             <div>
-              <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px;">BHI 基准健康指数（Benchmark Health Index）</div>
+              <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px;">BHI 指数（Benchmark Health Index）</div>
               <div style="font-size:0.9rem;line-height:1.7;opacity:0.92;">
-                通过 CRITIC 客观赋权将三个正交维度合成为单一健康指数，将评估实践从启发式判断提升为可量化、可解释的科学程序。
+                基于 LOBO 能力校准策略构建三个正交维度，通过 CRITIC 客观赋权合成为单一健康指数，量化评估基准的区分分辨率、结构耐久性与生态采纳度。
               </div>
             </div>
           </div>
@@ -186,21 +186,21 @@ section { margin-bottom: 60px; }
                 <span style="font-size:18px;">&#x1F3AF;</span>
                 <span style="font-size:0.9rem;font-weight:700;color:#63b3ed;">能力区分度</span>
               </div>
-              <div style="font-size:0.75rem;line-height:1.6;opacity:0.85;">衡量基准清晰分离模型性能差异的能力</div>
+              <div style="font-size:0.75rem;line-height:1.6;opacity:0.85;">通过微观分辨率与宏观带宽，量化基准区分模型性能的分辨能力</div>
             </div>
             <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:15px;">
                 <span style="font-size:18px;">&#x1F6E1;&#xFE0F;</span>
                 <span style="font-size:0.9rem;font-weight:700;color:#68d391;">抗饱和度</span>
               </div>
-              <div style="font-size:0.75rem;line-height:1.6;opacity:0.85;">衡量天花板效应前剩余的挑战空间与预期寿命</div>
+              <div style="font-size:0.75rem;line-height:1.6;opacity:0.85;">衡量模型能力演进下剩余的性能提升空间与结构耐久性</div>
             </div>
             <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:15px;">
                 <span style="font-size:18px;">&#x1F30D;</span>
                 <span style="font-size:0.9rem;font-weight:700;color:#b794f4;">影响力</span>
               </div>
-              <div style="font-size:0.75rem;line-height:1.6;opacity:0.85;">衡量经能力加权的基准采纳程度</div>
+              <div style="font-size:0.75rem;line-height:1.6;opacity:0.85;">衡量高能力模型的采纳程度——经能力加权的评估覆盖度</div>
             </div>
           </div>
         </div>
@@ -231,13 +231,13 @@ section { margin-bottom: 60px; }
   </div>
 </div>
 
-<!-- TAB 2: BHI指数计算方法 -->
+<!-- TAB 2: BHI 指数计算方法 -->
 <div class="tab-panel" id="panel-method">
   <div class="container" style="max-width:1200px;margin:0 auto 16px;">
     <section>
       <div class="section-header">
         <div class="icon" style="background:linear-gradient(135deg,#2b6cb0,#63b3ed);">&#x1F4D0;</div>
-        <h2>BHI指数计算方法</h2>
+        <h2>BHI 指数计算方法</h2>
       </div>
       <p style="color:#4a5568;font-size:14px;line-height:1.8;margin:12px 0 20px;">
         BHI 通过数据驱动聚合三个不同的评估维度来构建。三个维度——<strong style="color:#3182ce">能力区分度（SDisc）</strong>、<strong style="color:#38a169">抗饱和度（SAS）</strong>、<strong style="color:#805ad5">影响力（SImp）</strong>——沿正交互补轴评估基准：分别衡量区分分辨率、结构耐久性和生态采纳度。各维度均基于 <strong>LOBO（Leave-One-Benchmark-Out）</strong> 能力校准策略构建，最终通过 CRITIC 客观赋权框架合成为单一健康指数。
@@ -262,7 +262,7 @@ section { margin-bottom: 60px; }
 
         <!-- EDR -->
         <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:14px;">
-          <h4 style="font-size:14px;color:#3182ce;margin:0 0 8px;">3.1.1 EDR · 有效区分比（Effective Differentiation Ratio）</h4>
+          <h4 style="font-size:14px;color:#3182ce;margin:0 0 8px;">EDR · 有效区分比（Effective Differentiation Ratio）</h4>
           <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
             EDR 衡量微观分辨率——所有可能模型对中，性能差距超过噪声过滤阈值的比例。对于 N 个参与模型，EDR 定义为：
           </p>
@@ -276,7 +276,7 @@ section { margin-bottom: 60px; }
 
         <!-- RCV -->
         <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:14px;">
-          <h4 style="font-size:14px;color:#3182ce;margin:0 0 8px;">3.1.2 RCV · 稳健变异系数（Robust Coefficient of Variation）</h4>
+          <h4 style="font-size:14px;color:#3182ce;margin:0 0 8px;">RCV · 稳健变异系数（Robust Coefficient of Variation）</h4>
           <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
             RCV 刻画宏观带宽——使用 N 个模型分数分布的中间 80% 来测量有效性能展幅，从而减轻极端异常值的影响：
           </p>
@@ -290,7 +290,7 @@ section { margin-bottom: 60px; }
 
         <!-- SDisc 合成 -->
         <div style="background:#edf2f7;border-left:4px solid #3182ce;border-radius:8px;padding:16px 20px;">
-          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">3.1.3 归一化与 SDisc 合成</h4>
+          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">归一化与 SDisc 合成</h4>
           <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
             在最终融合前，对 EDR 和 RCV 均应用 Min-Max 归一化，映射到共同的 [0,1] 区间以消除量纲差异。随后使用<strong>标准差加权法（SDM）</strong>进行聚合——该方法放大相对对比度，同时减轻稀疏模型覆盖基准中的统计方差收缩问题。SDisc 合成公式为：
           </p>
@@ -303,48 +303,11 @@ section { margin-bottom: 60px; }
         </div>
       </div>
 
-      <!-- ==================== 3.2 LOBO ==================== -->
-      <div style="background:#f7fafc;border-left:4px solid #2b6cb0;border-radius:8px;padding:18px 22px;margin-bottom:32px;">
-        <h3 style="font-size:17px;color:#2d3748;margin:0 0 10px;display:flex;align-items:center;gap:8px;">
-          <span style="font-size:20px;">&#x2696;&#xFE0F;</span>
-          二、模型能力校准 · Model Capability Calibration
-        </h3>
-        <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 12px;">
-          为抗饱和度（§3.3）和影响力（§3.4）提供公平的能力参照基准。为避免由同一数据池推导模型能力而产生的<strong>自引用偏差（self-referential bias）</strong>，实施 <strong>LOBO（Leave-One-Benchmark-Out）</strong> 策略——对任意目标基准 b ∈ B，能力分数 θ<sub>i</sub><sup>(−b)</sup> 严格使用剩余基准集合 B \ {b} 的数据计算，确保通过样本外评估实现方法论独立性。
-        </p>
-
-        <div style="background:#fff;border-radius:8px;padding:14px 18px;margin-bottom:10px;">
-          <h4 style="font-size:13px;color:#2b6cb0;margin:0 0 8px;">3.2.1 LOBO 调整胜率（LOBO-adjusted Win Rate）</h4>
-          <p style="color:#4a5568;font-size:12px;line-height:1.7;margin:0 0 8px;">
-            采用两两对抗（pairwise battle）机制确保跨异构指标的统一标准化。模型 i 在排除基准 b 后的 LOBO 调整胜率表示其击败所有对手的平均概率：
-          </p>
-          <div style="font-family:'Courier New',monospace;font-size:11px;line-height:1.7;color:#2d3748;background:#f8fafc;border-radius:4px;padding:10px 14px;">
-            WinRate<sub>i</sub><sup>(−b)</sup> = Σ<sub>b'∈B\{b}</sub> (Win<sub>i,b'</sub> + 0.5·Tie<sub>i,b'</sub>) / Σ<sub>b'∈B\{b}</sub> (N<sub>b'</sub> − 1)
-          </div>
-          <p style="color:#718096;font-size:11px;line-height:1.6;margin:6px 0 0;">
-            Win<sub>i,b'</sub> 和 Tie<sub>i,b'</sub> 分别为模型 i 在基准 b' 上的胜负和平局次数，N<sub>b'</sub> 为基准 b' 的参与模型总数。该胜率确保跨异构评测尺度的一致性。
-          </p>
-        </div>
-
-        <div style="background:#fff;border-radius:8px;padding:14px 18px;">
-          <h4 style="font-size:13px;color:#2b6cb0;margin:0 0 8px;">3.2.2 四次根对数平衡模型（Fourth-root Log-Balance Model）</h4>
-          <p style="color:#4a5568;font-size:12px;line-height:1.7;margin:0 0 8px;">
-            将胜率与模型参与密度整合，确保能力分数严格反映模型性能与统计可靠性：
-          </p>
-          <div style="font-family:'Courier New',monospace;font-size:11px;line-height:1.7;color:#2d3748;background:#f8fafc;border-radius:4px;padding:10px 14px;">
-            θ<sub>i</sub><sup>(−b)</sup> = ∜(log(1 + n<sub>i</sub><sup>(−b)</sup>) · WinRate<sub>i</sub><sup>(−b)</sup> + log(1 + n<sub>i</sub><sup>(−b)</sup> / N<sub>B</sub>))
-          </div>
-          <p style="color:#718096;font-size:11px;line-height:1.6;margin:6px 0 0;">
-            n<sub>i</sub><sup>(−b)</sup> = 模型 i 在 LOBO 参考池 B \ {b} 中参与的基准数；N<sub>B</sub> = |B| − 1 为 LOBO 参考池中的基准总数。对数项中加常数 1 为保证数值稳定性。
-          </p>
-        </div>
-      </div>
-
       <!-- ==================== 3.3 SAS ==================== -->
       <div style="margin-bottom:32px;">
         <h3 style="font-size:17px;color:#2d3748;margin:0 0 6px;display:flex;align-items:center;gap:6px;">
           <span style="display:inline-block;width:4px;height:20px;background:#38a169;border-radius:2px;"></span>
-          三、抗饱和度 · Structural Anti-Saturation（SAS）
+          二、抗饱和度 · Structural Anti-Saturation（SAS）
         </h3>
         <p style="color:#4a5568;font-size:14px;line-height:1.8;margin:6px 0 14px;">
           SAS 衡量基准 b ∈ B 在模型能力持续演进压力下剩余的<strong>性能提升空间（performance headroom）</strong>，以此刻画基准的<strong>结构耐久性（structural durability）</strong>。该维度分解为两个互补组件：静态加权抵抗（SSta）提供对当前饱和状态的稳定观测，动态饱和度预测（SDyn）通过时间序列建模捕捉短期分数膨胀趋势。
@@ -352,7 +315,7 @@ section { margin-bottom: 60px; }
 
         <!-- SSta -->
         <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:14px;">
-          <h4 style="font-size:14px;color:#38a169;margin:0 0 8px;">3.3.1 SSta · 静态加权抵抗（Static Weighted Resistance）</h4>
+          <h4 style="font-size:14px;color:#38a169;margin:0 0 8px;">SSta · 静态加权抵抗（Static Weighted Resistance）</h4>
           <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
             SSta 通过能力加权分数分布来估计基准的难度，使用 LOBO 校准能力分数 θ<sub>i</sub><sup>(−b)</sup> 评估基准难度相对于参与者实力的关系。该加权方法施以<strong>差异化惩罚</strong>——低能力模型的得分会引发 SSta 更显著的降低，而前沿模型的得分则被相对保留。
           </p>
@@ -366,7 +329,7 @@ section { margin-bottom: 60px; }
 
         <!-- SDyn -->
         <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:14px;">
-          <h4 style="font-size:14px;color:#38a169;margin:0 0 8px;">3.3.2 SDyn · 动态饱和度预测（Dynamic Saturation Projection）</h4>
+          <h4 style="font-size:14px;color:#38a169;margin:0 0 8px;">SDyn · 动态饱和度预测（Dynamic Saturation Projection）</h4>
           <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
             SDyn 通过在时间序列趋势模型下预测近期性能来衡量分数膨胀的短期速度。使用<strong>普通最小二乘法（OLS）</strong>拟合线性趋势 y = k · t + d，其中斜率 k 代表<strong>征服率（conquest rate）</strong>——每日分数增量。以 30 天预测窗口定义动态饱和度：
           </p>
@@ -394,7 +357,7 @@ section { margin-bottom: 60px; }
       <div style="margin-bottom:0;">
         <h3 style="font-size:17px;color:#2d3748;margin:0 0 6px;display:flex;align-items:center;gap:6px;">
           <span style="display:inline-block;width:4px;height:20px;background:#805ad5;border-radius:2px;"></span>
-          四、影响力 · Capability-Weighted Adoption Impact（SImp）
+          三、影响力 · Capability-Weighted Adoption Impact（SImp）
         </h3>
         <p style="color:#4a5568;font-size:14px;line-height:1.8;margin:6px 0 14px;">
           SImp 通过高能力模型对基准的采纳程度来衡量基准 b ∈ B 的<strong>生态影响力（ecological influence）</strong>。不同于依赖原始流行度信号（如仓库星标、下载量或历史引用动量），我们将影响力定义为模型生态系统中<strong>经能力加权的评估覆盖度（capability-weighted evaluation coverage）</strong>。
@@ -402,7 +365,7 @@ section { margin-bottom: 60px; }
 
         <!-- SImp 公式 -->
         <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:14px;">
-          <h4 style="font-size:14px;color:#805ad5;margin:0 0 8px;">3.4.1 能力加权采用率（Capability-weighted Adoption）</h4>
+          <h4 style="font-size:14px;color:#805ad5;margin:0 0 8px;">能力加权采用率（Capability-weighted Adoption）</h4>
           <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
             令 M<sub>bench</sub> ⊆ M<sub>all</sub> 表示在基准 b 上报告了有效评估结果的模型集合（无论得分高低），M<sub>all</sub> 为数据集中完整模型集合。为避免循环依赖，使用 LOBO 校准能力分数 θ<sub>i</sub><sup>(−b)</sup>（排除基准 b 计算），原始能力覆盖度为：
           </p>
@@ -416,7 +379,7 @@ section { margin-bottom: 60px; }
 
         <!-- 解读 -->
         <div style="background:#faf5ff;border-left:4px solid #805ad5;border-radius:8px;padding:16px 20px;margin-bottom:14px;">
-          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">3.4.2 设计解读</h4>
+          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">设计解读</h4>
           <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
             该公式将影响力捕捉为<strong>能力加权采用度</strong>。当生态系统中相当比例的校准模型能力体现在基准的参与模型集合中时，该基准获得高 SImp 值。由于能力分数通过 LOBO 校准计算，被评估的基准本身不会影响用于衡量其自身影响力的能力估计值。
           </p>
@@ -432,6 +395,44 @@ section { margin-bottom: 60px; }
           </ul>
         </div>
       </div>
+
+      <!-- ==================== LOBO ==================== -->
+      <div style="background:#f7fafc;border-left:4px solid #2b6cb0;border-radius:8px;padding:18px 22px;margin-bottom:32px;">
+        <h3 style="font-size:17px;color:#2d3748;margin:0 0 10px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">&#x2696;&#xFE0F;</span>
+          四、模型能力校准 · Model Capability Calibration
+        </h3>
+        <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 12px;">
+          为抗饱和度和影响力维度提供公平的能力参照基准。为避免由同一数据池推导模型能力而产生的<strong>自引用偏差（self-referential bias）</strong>，实施 <strong>LOBO（Leave-One-Benchmark-Out）</strong> 策略——对任意目标基准 b ∈ B，能力分数 θ<sub>i</sub><sup>(−b)</sup> 严格使用剩余基准集合 B \ {b} 的数据计算，确保通过样本外评估实现方法论独立性。
+        </p>
+
+        <div style="background:#fff;border-radius:8px;padding:14px 18px;margin-bottom:10px;">
+          <h4 style="font-size:13px;color:#2b6cb0;margin:0 0 8px;">LOBO 调整胜率（LOBO-adjusted Win Rate）</h4>
+          <p style="color:#4a5568;font-size:12px;line-height:1.7;margin:0 0 8px;">
+            采用两两对抗（pairwise battle）机制确保跨异构指标的统一标准化。模型 i 在排除基准 b 后的 LOBO 调整胜率表示其击败所有对手的平均概率：
+          </p>
+          <div style="font-family:'Courier New',monospace;font-size:11px;line-height:1.7;color:#2d3748;background:#f8fafc;border-radius:4px;padding:10px 14px;">
+            WinRate<sub>i</sub><sup>(−b)</sup> = Σ<sub>b'∈B\{b}</sub> (Win<sub>i,b'</sub> + 0.5·Tie<sub>i,b'</sub>) / Σ<sub>b'∈B\{b}</sub> (N<sub>b'</sub> − 1)
+          </div>
+          <p style="color:#718096;font-size:11px;line-height:1.6;margin:6px 0 0;">
+            Win<sub>i,b'</sub> 和 Tie<sub>i,b'</sub> 分别为模型 i 在基准 b' 上的胜负和平局次数，N<sub>b'</sub> 为基准 b' 的参与模型总数。该胜率确保跨异构评测尺度的一致性。
+          </p>
+        </div>
+
+        <div style="background:#fff;border-radius:8px;padding:14px 18px;">
+          <h4 style="font-size:13px;color:#2b6cb0;margin:0 0 8px;">四次根对数平衡模型（Fourth-root Log-Balance Model）</h4>
+          <p style="color:#4a5568;font-size:12px;line-height:1.7;margin:0 0 8px;">
+            将胜率与模型参与密度整合，确保能力分数严格反映模型性能与统计可靠性：
+          </p>
+          <div style="font-family:'Courier New',monospace;font-size:11px;line-height:1.7;color:#2d3748;background:#f8fafc;border-radius:4px;padding:10px 14px;">
+            θ<sub>i</sub><sup>(−b)</sup> = ∜(log(1 + n<sub>i</sub><sup>(−b)</sup>) · WinRate<sub>i</sub><sup>(−b)</sup> + log(1 + n<sub>i</sub><sup>(−b)</sup> / N<sub>B</sub>))
+          </div>
+          <p style="color:#718096;font-size:11px;line-height:1.6;margin:6px 0 0;">
+            n<sub>i</sub><sup>(−b)</sup> = 模型 i 在 LOBO 参考池 B \ {b} 中参与的基准数；N<sub>B</sub> = |B| − 1 为 LOBO 参考池中的基准总数。对数项中加常数 1 为保证数值稳定性。
+          </p>
+        </div>
+      </div>
+
     </section>
   </div>
 </div>
@@ -609,11 +610,11 @@ function renderConclusion() {
           const cx = left + width / 2;
           const cy = top + height / 2;
           ctx.save();
-          ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+          ctx.font = '16px -apple-system, BlinkMacSystemFont, sans-serif';
           ctx.fillStyle = '#1a202c';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText('BHI 权重', cx, cy);
+          ctx.fillText('BHI 指数', cx, cy);
           ctx.restore();
         }
       }]
@@ -712,7 +713,7 @@ function renderConclusion() {
 
   const descEl = document.getElementById('conclusionDesc');
   const t = top10[0];
-  descEl.innerHTML = `<strong>BHI指数排行榜</strong>：${t.name}（BHI = ${fmt(bhiValues[0])}）位列 BHI 榜单第一名。BHI 通过 CRITIC 客观赋权将能力区分度、抗饱和度、影响力三个正交维度合成为单一健康指数，将评估实践从启发式判断提升为可量化、可解释的科学程序。`;
+  descEl.innerHTML = `<strong>BHI 指数排行榜</strong>：${t.name}（BHI = ${fmt(bhiValues[0])}）位列 BHI 榜单第一名。BHI 通过 CRITIC 客观赋权将能力区分度、抗饱和度、影响力三个正交维度合成为单一健康指数，将评估实践从启发式判断提升为可量化、可解释的科学程序。`;
 }
 function renderDimCards() {
   const discEl = document.getElementById('dimCards_disc');
