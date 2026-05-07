@@ -240,164 +240,195 @@ section { margin-bottom: 60px; }
         <h2>BHI指数计算方法</h2>
       </div>
       <p style="color:#4a5568;font-size:14px;line-height:1.8;margin:12px 0 20px;">
-        BHI 沿三个正交互补轴评估基准：(1) <strong style="color:#3182ce">能力区分度</strong>（Capability Discrimination），衡量基准在噪声之上清晰分离模型性能差异的能力；(2) <strong style="color:#38a169">抗饱和度</strong>（Anti-Saturation），衡量天花板效应侵蚀分辨率前剩余的挑战空间与预期寿命；(3) <strong style="color:#805ad5">影响力</strong>（Impact），衡量模型生态系统中经能力加权的基准采纳程度。三个维度指标通过 CRITIC 客观赋权框架合成为 BHI。
+        BHI 通过数据驱动聚合三个不同的评估维度来构建。三个维度——<strong style="color:#3182ce">能力区分度（SDisc）</strong>、<strong style="color:#38a169">抗饱和度（SAS）</strong>、<strong style="color:#805ad5">影响力（SImp）</strong>——沿正交互补轴评估基准：分别衡量区分分辨率、结构耐久性和生态采纳度。各维度均基于 <strong>LOBO（Leave-One-Benchmark-Out）</strong> 能力校准策略构建，最终通过 CRITIC 客观赋权框架合成为单一健康指数。
       </p>
 
       <!-- BHI 公式 & 权重 -->
       <div class="formula-box" style="margin-bottom:32px;">
         <div style="font-size:0.9rem;color:#4a5568;margin-bottom:4px;">BHI 合成公式（CRITIC 客观赋权）</div>
-        <div class="formula">BHI(b) = w<sub>Disc</sub> &middot; S<sub>Disc</sub>(b) + w<sub>AS</sub> &middot; S<sub>AS</sub>(b) + w<sub>Imp</sub> &middot; S<sub>Imp</sub>(b)</div>
+        <div class="formula">BHI(b) = w<sub>Disc</sub> &middot; SDisc(b) + w<sub>AS</sub> &middot; SAS(b) + w<sub>Imp</sub> &middot; SImp(b)</div>
         <div class="weights" id="weightsTable"></div>
       </div>
 
-      <!-- 前置计算：LOBO 能力校准 -->
-      <div style="background:#f7fafc;border-left:4px solid #2b6cb0;border-radius:8px;padding:16px 20px;margin-bottom:28px;">
-        <h3 style="font-size:15px;color:#2d3748;margin:0 0 8px;display:flex;align-items:center;gap:8px;">
-          <span style="font-size:20px;">&#x1F50D;</span>
-          前置计算：LOBO 能力校准
+      <!-- ==================== 3.1 SDisc ==================== -->
+      <div style="margin-bottom:32px;">
+        <h3 style="font-size:17px;color:#2d3748;margin:0 0 6px;display:flex;align-items:center;gap:6px;">
+          <span style="display:inline-block;width:4px;height:20px;background:#3182ce;border-radius:2px;"></span>
+          一、能力区分度 · Capability Discrimination（SDisc）
         </h3>
-        <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
-          为避免自引用偏差，所有维度的能力分数均通过 <strong>Leave-One-Benchmark-Out (LOBO)</strong> 策略计算——排除目标基准 b 后，用其余基准数据校准模型能力。
-        </p>
-        <div style="background:#fff;border-radius:6px;padding:12px 16px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
-          <div style="margin-bottom:6px;"><strong>LOBO 调整胜率：</strong></div>
-          <div style="margin-left:12px;color:#4a5568;">WinRate<sub>i</sub><sup>(-b)</sup> = Σ<sub>b'∈B\{b}</sub> (Win<sub>i,b'</sub> + 0.5·Tie<sub>i,b'</sub>) / Σ<sub>b'∈B\{b}</sub> (N<sub>b'</sub> - 1)</div>
-          <div style="margin-top:8px;margin-bottom:6px;"><strong>四次根对数平衡模型：</strong></div>
-          <div style="margin-left:12px;color:#4a5568;">θ<sub>i</sub><sup>(-b)</sup> = Fourth-root Log-Balance(WinRate<sub>i</sub><sup>(-b)</sup>, n<sub>i</sub><sup>(-b)</sup>)</div>
-        </div>
-      </div>
-
-      <!-- S_Disc -->
-      <div style="margin-bottom:28px;">
-        <h3 style="font-size:16px;color:#2d3748;margin:0 0 8px;display:flex;align-items:center;gap:6px;">
-          <span style="display:inline-block;width:4px;height:18px;background:#3182ce;border-radius:2px;"></span>
-          能力区分度 · Capability Discrimination Score (S<sub>Disc</sub>)
-        </h3>
-        <p style="color:#4a5568;font-size:14px;line-height:1.7;margin:0 0 12px;">
-          量化基准 b 在噪声之上清晰分离模型性能差异的能力，通过微观分辨率（EDR）和宏观带宽（RCV）双维度刻画。区分度高的基准能清晰拉开模型间差距，区分度低的基准则沦为"记忆检测器"。
+        <p style="color:#4a5568;font-size:14px;line-height:1.8;margin:6px 0 14px;">
+          SDisc 通过<strong>微观分辨率（micro-resolution）</strong>和<strong>宏观带宽（macro-bandwidth）</strong>两个维度，量化基准 b ∈ B 在区分潜在模型性能方面的分辨能力。所有模型分数预归一化至 [0,100] 尺度以保持一致性。区分度高的基准能清晰拉开模型间差距，区分度低的基准则沦为"记忆检测器"。
         </p>
 
         <!-- EDR -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
-          <h4 style="font-size:14px;color:#3182ce;margin:0 0 8px;">1. EDR · Effective Differentiation Ratio（有效区分比）</h4>
-          <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
-            所有模型对中，性能差距超过噪声过滤阈值的比例，刻画微观分辨率。
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:14px;">
+          <h4 style="font-size:14px;color:#3182ce;margin:0 0 8px;">3.1.1 EDR · 有效区分比（Effective Differentiation Ratio）</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
+            EDR 衡量微观分辨率——所有可能模型对中，性能差距超过噪声过滤阈值的比例。对于 N 个参与模型，EDR 定义为：
           </p>
-          <div style="background:#f7fafc;border-radius:6px;padding:10px 14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
-            EDR(b) = Σ<sub>1≤i<j≤N</sub> I(|Score<sub>i</sub> - Score<sub>j</sub>| > δ) / [N(N-1)/2]
+          <div style="background:#f8fafc;border-radius:6px;padding:14px 18px;margin-bottom:8px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;color:#2d3748;">
+            EDR(b) = Σ<sub>1≤i&lt;j≤N</sub> I(|Score<sub>i</sub> − Score<sub>j</sub>| &gt; δ) / [N(N−1)/2]
           </div>
-          <p style="color:#718096;font-size:12px;margin:8px 0 0;line-height:1.6;">
-            <strong>参数说明：</strong>N = 参与模型数；δ = 0.02·(max(Score) - min(Score)) 为自适应阈值（观测分数范围的2%）；I(·) 为指示函数。
+          <p style="color:#718096;font-size:12px;line-height:1.7;margin:0;">
+            <strong>参数：</strong>δ = 0.02 · (max(Score) − min(Score)) 为自适应阈值，取观测分数范围的 2%；I(·) 为指示函数。附录 C 的敏感性分析证实 SDisc 在 δ ∈ [0.5%, 5.0%] 范围内高度稳健，确保捕获的是内在区分信号而非测量噪声。
           </p>
         </div>
 
         <!-- RCV -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
-          <h4 style="font-size:14px;color:#3182ce;margin:0 0 8px;">2. RCV · Robust Coefficient of Variation（稳健变异系数）</h4>
-          <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
-            使用分数分布中间80%（去除极端值）测量有效性能展幅，刻画宏观带宽。
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:14px;">
+          <h4 style="font-size:14px;color:#3182ce;margin:0 0 8px;">3.1.2 RCV · 稳健变异系数（Robust Coefficient of Variation）</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
+            RCV 刻画宏观带宽——使用 N 个模型分数分布的中间 80% 来测量有效性能展幅，从而减轻极端异常值的影响：
           </p>
-          <div style="background:#f7fafc;border-radius:6px;padding:10px 14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
-            RCV(b) = [P<sub>90</sub>(Score) - P<sub>10</sub>(Score)] / 100
+          <div style="background:#f8fafc;border-radius:6px;padding:14px 18px;margin-bottom:8px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;color:#2d3748;">
+            RCV(b) = [P<sub>90</sub>(Score) − P<sub>10</sub>(Score)] / 100
           </div>
-          <p style="color:#718096;font-size:12px;margin:8px 0 0;line-height:1.6;">
-            <strong>参数说明：</strong>P<sub>90</sub> 和 P<sub>10</sub> 分别为90分位数和10分位数。
+          <p style="color:#718096;font-size:12px;line-height:1.7;margin:0;">
+            <strong>参数：</strong>P<sub>90</sub>(Score) 和 P<sub>10</sub>(Score) 分别为分数分布的第 90 和第 10 百分位数。
           </p>
         </div>
 
         <!-- SDisc 合成 -->
-        <div style="background:#edf2f7;border-left:4px solid #3182ce;border-radius:8px;padding:14px 18px;">
-          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">S<sub>Disc</sub> 合成公式</h4>
+        <div style="background:#edf2f7;border-left:4px solid #3182ce;border-radius:8px;padding:16px 20px;">
+          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">3.1.3 归一化与 SDisc 合成</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
+            在最终融合前，对 EDR 和 RCV 均应用 Min-Max 归一化，映射到共同的 [0,1] 区间以消除量纲差异。随后使用<strong>标准差加权法（SDM）</strong>进行聚合——该方法放大相对对比度，同时减轻稀疏模型覆盖基准中的统计方差收缩问题。SDisc 合成公式为：
+          </p>
           <div style="font-family:'Courier New',monospace;font-size:13px;line-height:1.6;color:#2d3748;">
-            S<sub>Disc</sub>(b) = Σ<sub>k∈{EDR,RCV}</sub> w<sub>k</sub> · Norm(k)
+            SDisc(b) = Σ<sub>k∈{EDR,RCV}</sub> w<sub>k</sub> · Norm(k)
           </div>
-          <p style="color:#4a5568;font-size:12px;margin:8px 0 0;line-height:1.6;">
-            先对 EDR 和 RCV 做 Min-Max 归一化到 [0,1]，权重 w<sub>k</sub> 通过 SDM（标准差加权）计算，基于归一化后的标准差比例分配。
+          <p style="color:#718096;font-size:12px;line-height:1.7;margin:8px 0 0;">
+            w<sub>k</sub> 由归一化后各指标的标准差比例确定，确保在归一化后仍保持较大离散度的指标获得更高权重（详见附录 D）。
           </p>
         </div>
       </div>
 
-      <!-- SAS -->
-      <div style="margin-bottom:28px;">
-        <h3 style="font-size:16px;color:#2d3748;margin:0 0 8px;display:flex;align-items:center;gap:6px;">
-          <span style="display:inline-block;width:4px;height:18px;background:#38a169;border-radius:2px;"></span>
-          抗饱和度 · Structural Anti-Saturation (S<sub>AS</sub>)
+      <!-- ==================== 3.2 LOBO ==================== -->
+      <div style="background:#f7fafc;border-left:4px solid #2b6cb0;border-radius:8px;padding:18px 22px;margin-bottom:32px;">
+        <h3 style="font-size:17px;color:#2d3748;margin:0 0 10px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">&#x2696;&#xFE0F;</span>
+          二、模型能力校准 · Model Capability Calibration
         </h3>
-        <p style="color:#4a5568;font-size:14px;line-height:1.7;margin:0 0 12px;">
-          衡量基准 b 在模型能力演进压力下的结构耐久性（剩余性能提升空间），通过静态抵抗（SSta）和动态预测（SDyn）双维度诊断。
+        <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 12px;">
+          为抗饱和度（§3.3）和影响力（§3.4）提供公平的能力参照基准。为避免由同一数据池推导模型能力而产生的<strong>自引用偏差（self-referential bias）</strong>，实施 <strong>LOBO（Leave-One-Benchmark-Out）</strong> 策略——对任意目标基准 b ∈ B，能力分数 θ<sub>i</sub><sup>(−b)</sup> 严格使用剩余基准集合 B \ {b} 的数据计算，确保通过样本外评估实现方法论独立性。
+        </p>
+
+        <div style="background:#fff;border-radius:8px;padding:14px 18px;margin-bottom:10px;">
+          <h4 style="font-size:13px;color:#2b6cb0;margin:0 0 8px;">3.2.1 LOBO 调整胜率（LOBO-adjusted Win Rate）</h4>
+          <p style="color:#4a5568;font-size:12px;line-height:1.7;margin:0 0 8px;">
+            采用两两对抗（pairwise battle）机制确保跨异构指标的统一标准化。模型 i 在排除基准 b 后的 LOBO 调整胜率表示其击败所有对手的平均概率：
+          </p>
+          <div style="font-family:'Courier New',monospace;font-size:11px;line-height:1.7;color:#2d3748;background:#f8fafc;border-radius:4px;padding:10px 14px;">
+            WinRate<sub>i</sub><sup>(−b)</sup> = Σ<sub>b'∈B\{b}</sub> (Win<sub>i,b'</sub> + 0.5·Tie<sub>i,b'</sub>) / Σ<sub>b'∈B\{b}</sub> (N<sub>b'</sub> − 1)
+          </div>
+          <p style="color:#718096;font-size:11px;line-height:1.6;margin:6px 0 0;">
+            Win<sub>i,b'</sub> 和 Tie<sub>i,b'</sub> 分别为模型 i 在基准 b' 上的胜负和平局次数，N<sub>b'</sub> 为基准 b' 的参与模型总数。该胜率确保跨异构评测尺度的一致性。
+          </p>
+        </div>
+
+        <div style="background:#fff;border-radius:8px;padding:14px 18px;">
+          <h4 style="font-size:13px;color:#2b6cb0;margin:0 0 8px;">3.2.2 四次根对数平衡模型（Fourth-root Log-Balance Model）</h4>
+          <p style="color:#4a5568;font-size:12px;line-height:1.7;margin:0 0 8px;">
+            将胜率与模型参与密度整合，确保能力分数严格反映模型性能与统计可靠性：
+          </p>
+          <div style="font-family:'Courier New',monospace;font-size:11px;line-height:1.7;color:#2d3748;background:#f8fafc;border-radius:4px;padding:10px 14px;">
+            θ<sub>i</sub><sup>(−b)</sup> = ∜(log(1 + n<sub>i</sub><sup>(−b)</sup>) · WinRate<sub>i</sub><sup>(−b)</sup> + log(1 + n<sub>i</sub><sup>(−b)</sup> / N<sub>B</sub>))
+          </div>
+          <p style="color:#718096;font-size:11px;line-height:1.6;margin:6px 0 0;">
+            n<sub>i</sub><sup>(−b)</sup> = 模型 i 在 LOBO 参考池 B \ {b} 中参与的基准数；N<sub>B</sub> = |B| − 1 为 LOBO 参考池中的基准总数。对数项中加常数 1 为保证数值稳定性。
+          </p>
+        </div>
+      </div>
+
+      <!-- ==================== 3.3 SAS ==================== -->
+      <div style="margin-bottom:32px;">
+        <h3 style="font-size:17px;color:#2d3748;margin:0 0 6px;display:flex;align-items:center;gap:6px;">
+          <span style="display:inline-block;width:4px;height:20px;background:#38a169;border-radius:2px;"></span>
+          三、抗饱和度 · Structural Anti-Saturation（SAS）
+        </h3>
+        <p style="color:#4a5568;font-size:14px;line-height:1.8;margin:6px 0 14px;">
+          SAS 衡量基准 b ∈ B 在模型能力持续演进压力下剩余的<strong>性能提升空间（performance headroom）</strong>，以此刻画基准的<strong>结构耐久性（structural durability）</strong>。该维度分解为两个互补组件：静态加权抵抗（SSta）提供对当前饱和状态的稳定观测，动态饱和度预测（SDyn）通过时间序列建模捕捉短期分数膨胀趋势。
         </p>
 
         <!-- SSta -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
-          <h4 style="font-size:14px;color:#38a169;margin:0 0 8px;">1. S<sub>Sta</sub> · Static Weighted Resistance（静态加权抵抗）</h4>
-          <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
-            通过能力加权的方式估计基准难度，使用 LOBO 校准能力分数 θ<sub>i</sub> 对参与者加权。
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:14px;">
+          <h4 style="font-size:14px;color:#38a169;margin:0 0 8px;">3.3.1 SSta · 静态加权抵抗（Static Weighted Resistance）</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
+            SSta 通过能力加权分数分布来估计基准的难度，使用 LOBO 校准能力分数 θ<sub>i</sub><sup>(−b)</sup> 评估基准难度相对于参与者实力的关系。该加权方法施以<strong>差异化惩罚</strong>——低能力模型的得分会引发 SSta 更显著的降低，而前沿模型的得分则被相对保留。
           </p>
-          <div style="background:#f7fafc;border-radius:6px;padding:10px 14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
-            S<sub>Sta</sub>(b) = 1 - [Σ<sub>i∈N</sub> Score<sub>i,b</sub>] / [Σ<sub>i∈N</sub> θ<sub>i</sub><sup>(-b)</sup>]
+          <div style="background:#f8fafc;border-radius:6px;padding:14px 18px;margin-bottom:8px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;color:#2d3748;">
+            SSta(b) = 1 − [Σ<sub>i∈N</sub> Score<sub>i,b</sub>] / [Σ<sub>i∈N</sub> θ<sub>i</sub><sup>(−b)</sup>]
           </div>
-          <p style="color:#718096;font-size:12px;margin:8px 0 0;line-height:1.6;">
-            <strong>参数说明：</strong>Score<sub>i,b</sub> ∈ [0,1] 为模型 i 在基准 b 的归一化分数；θ<sub>i</sub><sup>(-b)</sup> 为 LOBO 校准能力分数。
+          <p style="color:#718096;font-size:12px;line-height:1.7;margin:0;">
+            <strong>参数：</strong>Score<sub>i,b</sub> ∈ [0,1] 为模型 i 在基准 b 上的归一化性能；θ<sub>i</sub><sup>(−b)</sup> 为 LOBO 校准能力分数。用 Σ θ<sub>i</sub><sup>(−b)</sup> 归一化进一步消除了参与模型数量规模的影响，确保 SSta 对评估模型总数保持不变性。
           </p>
         </div>
 
         <!-- SDyn -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
-          <h4 style="font-size:14px;color:#38a169;margin:0 0 8px;">2. S<sub>Dyn</sub> · Dynamic Saturation Projection（动态饱和度预测）</h4>
-          <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
-            通过时间序列趋势模型预测短期内分数膨胀速度，测量未来30天的剩余空间。
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:14px;">
+          <h4 style="font-size:14px;color:#38a169;margin:0 0 8px;">3.3.2 SDyn · 动态饱和度预测（Dynamic Saturation Projection）</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
+            SDyn 通过在时间序列趋势模型下预测近期性能来衡量分数膨胀的短期速度。使用<strong>普通最小二乘法（OLS）</strong>拟合线性趋势 y = k · t + d，其中斜率 k 代表<strong>征服率（conquest rate）</strong>——每日分数增量。以 30 天预测窗口定义动态饱和度：
           </p>
-          <div style="background:#f7fafc;border-radius:6px;padding:10px 14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
-            S<sub>Dyn</sub>(b) = max(0, 1 - (Score<sub>b</sub> + 30·k))
+          <div style="background:#f8fafc;border-radius:6px;padding:14px 18px;margin-bottom:8px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;color:#2d3748;">
+            SDyn(b) = max(0, 1 − (Score<sub>b</sub> + 30 · k))
           </div>
-          <p style="color:#718096;font-size:12px;margin:8px 0 0;line-height:1.6;">
-            <strong>参数说明：</strong>Score<sub>b</sub> = 基准 b 当前平均分数；k = 通过最小二乘法拟合的线性趋势斜率（每日分数增量，即征服率）；若 k &lt; 0 则基准未饱和。
+          <p style="color:#718096;font-size:12px;line-height:1.7;margin:0;">
+            <strong>参数：</strong>Score<sub>b</sub> = 基准 b 的当前平均分数；k = OLS 拟合斜率（征服率）。若 k &lt; 0（分数下降趋势），基准被认为未饱和，SDyn 取较高值。
           </p>
         </div>
 
         <!-- SAS 合成 -->
-        <div style="background:#f0fff4;border-left:4px solid #38a169;border-radius:8px;padding:14px 18px;">
-          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">S<sub>AS</sub> 合成公式</h4>
+        <div style="background:#f0fff4;border-left:4px solid #38a169;border-radius:8px;padding:16px 20px;">
+          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">SAS 合成公式</h4>
           <div style="font-family:'Courier New',monospace;font-size:13px;line-height:1.6;color:#2d3748;">
-            SAS(b) = 0.8 · S<sub>Sta</sub> + 0.2 · S<sub>Dyn</sub>
+            SAS(b) = 0.8 · SSta + 0.2 · SDyn
           </div>
-          <p style="color:#4a5568;font-size:12px;margin:8px 0 0;line-height:1.6;">
-            静态权重 80%（稳定观测值），动态权重 20%（短期预测存在固有不确性）。
+          <p style="color:#4a5568;font-size:12px;line-height:1.7;margin:8px 0 0;">
+            SDyn 因短期预测的内在不确定性被赋予较低权重（20%），而静态组件提供了对当前饱和状态的稳定观测。
           </p>
         </div>
       </div>
 
-      <!-- S_Imp -->
+      <!-- ==================== 3.4 SImp ==================== -->
       <div style="margin-bottom:0;">
-        <h3 style="font-size:16px;color:#2d3748;margin:0 0 8px;display:flex;align-items:center;gap:6px;">
-          <span style="display:inline-block;width:4px;height:18px;background:#805ad5;border-radius:2px;"></span>
-          影响力 · Capability-Weighted Adoption Impact (S<sub>Imp</sub>)
+        <h3 style="font-size:17px;color:#2d3748;margin:0 0 6px;display:flex;align-items:center;gap:6px;">
+          <span style="display:inline-block;width:4px;height:20px;background:#805ad5;border-radius:2px;"></span>
+          四、影响力 · Capability-Weighted Adoption Impact（SImp）
         </h3>
-        <p style="color:#4a5568;font-size:14px;line-height:1.7;margin:0 0 12px;">
-          衡量基准 b 通过高能力模型采纳而产生的生态影响力（能力加权采用度），通过 LOBO 校准能力分数与平方根映射实现。
+        <p style="color:#4a5568;font-size:14px;line-height:1.8;margin:6px 0 14px;">
+          SImp 通过高能力模型对基准的采纳程度来衡量基准 b ∈ B 的<strong>生态影响力（ecological influence）</strong>。不同于依赖原始流行度信号（如仓库星标、下载量或历史引用动量），我们将影响力定义为模型生态系统中<strong>经能力加权的评估覆盖度（capability-weighted evaluation coverage）</strong>。
         </p>
 
         <!-- SImp 公式 -->
-        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
-          <h4 style="font-size:14px;color:#805ad5;margin:0 0 8px;">能力加权采用率</h4>
-          <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
-            使用 LOBO 校准能力分数加权，通过平方根映射压缩高覆盖基准的主导效应。
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin-bottom:14px;">
+          <h4 style="font-size:14px;color:#805ad5;margin:0 0 8px;">3.4.1 能力加权采用率（Capability-weighted Adoption）</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
+            令 M<sub>bench</sub> ⊆ M<sub>all</sub> 表示在基准 b 上报告了有效评估结果的模型集合（无论得分高低），M<sub>all</sub> 为数据集中完整模型集合。为避免循环依赖，使用 LOBO 校准能力分数 θ<sub>i</sub><sup>(−b)</sup>（排除基准 b 计算），原始能力覆盖度为：
           </p>
-          <div style="background:#f7fafc;border-radius:6px;padding:10px 14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
-            S<sub>Imp</sub>(b) = √[Σ<sub>i∈M<sub>bench</sub></sub> θ<sub>i</sub><sup>(-b)</sup> / |M<sub>all</sub>|]
+          <div style="background:#f8fafc;border-radius:6px;padding:14px 18px;margin-bottom:8px;font-family:'Courier New',monospace;font-size:12px;line-height:1.8;color:#2d3748;">
+            SImp(b) = √[ Σ<sub>i∈M<sub>bench</sub></sub> θ<sub>i</sub><sup>(−b)</sup> / |M<sub>all</sub>| ]
           </div>
-          <p style="color:#718096;font-size:12px;margin:8px 0 0;line-height:1.6;">
-            <strong>参数说明：</strong>M<sub>bench</sub> = 在基准 b 上报告有效结果的模型集合；M<sub>all</sub> = 完整模型集合；θ<sub>i</sub><sup>(-b)</sup> = LOBO 校准能力分数；√ 为平方根映射，防止高报告基准仅因流行度主导。
+          <p style="color:#718096;font-size:12px;line-height:1.7;margin:0;">
+            <strong>平方根映射的作用：</strong>压缩覆盖率比率的上范围，防止高报告基准仅因参与量而占据主导地位，同时仍保留被高能力模型评估的基准的优势。
           </p>
         </div>
 
-        <!-- 设计特点 -->
-        <div style="background:#faf5ff;border-left:4px solid #805ad5;border-radius:8px;padding:14px 18px;">
-          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">设计特点</h4>
-          <ul style="color:#4a5568;font-size:13px;line-height:1.8;margin:0;padding-left:20px;">
-            <li>不依赖基准发布日期、模型发布日期或社区元数据</li>
-            <li>通过 LOBO 校准实现能力分数与原始流行度脱钩</li>
-            <li>取值范围 [0,1]，更好地反映技术采纳水平而非单纯流行度</li>
+        <!-- 解读 -->
+        <div style="background:#faf5ff;border-left:4px solid #805ad5;border-radius:8px;padding:16px 20px;margin-bottom:14px;">
+          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">3.4.2 设计解读</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0 0 10px;">
+            该公式将影响力捕捉为<strong>能力加权采用度</strong>。当生态系统中相当比例的校准模型能力体现在基准的参与模型集合中时，该基准获得高 SImp 值。由于能力分数通过 LOBO 校准计算，被评估的基准本身不会影响用于衡量其自身影响力的能力估计值。
+          </p>
+          <p style="color:#4a5568;font-size:13px;line-height:1.8;margin:0;">
+            在构造上，SImp 具有以下特性：
+          </p>
+          <ul style="color:#4a5568;font-size:13px;line-height:2;margin:8px 0 0;padding-left:20px;">
+            <li>取值范围限定在 [0,1]</li>
+            <li>不依赖于基准发布日期</li>
+            <li>不依赖于模型发布日期</li>
+            <li>不依赖于社区元数据或启发式时间衰减</li>
+            <li>对原始流行度累积的敏感度降低，与高能力模型的技术采纳程度对齐</li>
           </ul>
         </div>
       </div>
