@@ -35,8 +35,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helv
 .stat-label { font-size: 0.85rem; color: var(--text-light); }
 
 /* TABS */
-.tab-nav { display: flex; justify-content: center; gap: 8px; padding: 0 20px 30px; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; }
-.tab-btn { padding: 12px 28px; border: 2px solid var(--border); border-radius: 12px; background: var(--card-bg); color: var(--text-light); font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.25s; box-shadow: var(--shadow); }
+.tab-nav { display: flex; justify-content: center; gap: 16px; padding: 0 20px 30px; max-width: 1200px; margin: 0 auto; flex-wrap: wrap; }
+.tab-btn { padding: 14px 34px; border: 2px solid var(--border); border-radius: 12px; background: var(--card-bg); color: var(--text-light); font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: all 0.25s; box-shadow: var(--shadow); }
 .tab-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
 .tab-btn.active { background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border-color: transparent; box-shadow: 0 4px 14px rgba(14,116,144,0.35); }
 .tab-panel { display: none; padding-bottom: 40px; }
@@ -127,6 +127,8 @@ section { margin-bottom: 60px; }
   .hero .subtitle { font-size: 0.95rem; }
   .stats-grid { grid-template-columns: repeat(3, 1fr); }
   .tab-btn { padding: 10px 18px; font-size: 0.9rem; }
+  .bhi-intro-row { flex-direction: column !important; }
+  .bhi-dim-grid { grid-template-columns: 1fr !important; }
   .dir-section { padding: 20px; }
   .chart-grid { grid-template-columns: 1fr; }
 }
@@ -152,11 +154,11 @@ section { margin-bottom: 60px; }
 
 <!-- TAB NAV -->
 <div class="tab-nav">
-  <button class="tab-btn active" data-tab="conclusion">整体评测结果</button>
-  <button class="tab-btn" data-tab="method">评测维度与方法</button>
+  <button class="tab-btn active" data-tab="conclusion">BHI指数排行榜</button>
+  <button class="tab-btn" data-tab="method">BHI指数计算方法</button>
 </div>
 
-<!-- TAB 1: 整体评测结果 -->
+<!-- TAB 1: BHI指数排行榜 -->
 <div class="tab-panel active" id="panel-conclusion">
   <div class="container">
     <section>
@@ -165,6 +167,48 @@ section { margin-bottom: 60px; }
         <h2>BHI 基准健康指数排行榜</h2>
       </div>
       <p id="conclusionDesc" style="color:#4a5568;font-size:14px;line-height:1.8;margin:12px 0 20px;"></p>
+
+      <!-- BHI 定义卡片 + 权重环形图 -->
+      <div class="bhi-intro-row" style="display:flex;gap:24px;align-items:stretch;margin-bottom:28px;">
+        <div style="flex:1;background:linear-gradient(135deg,#1E2A5D,#2D4A8E);border-radius:16px;padding:24px 28px;color:white;">
+          <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
+            <span style="font-size:28px;flex-shrink:0;">&#x1F4CA;</span>
+            <div>
+              <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px;">BHI 基准健康指数（Benchmark Health Index）</div>
+              <div style="font-size:0.9rem;line-height:1.7;opacity:0.92;">
+                通过 CRITIC 客观赋权将三个正交维度合成为单一健康指数，将评估实践从启发式判断提升为可量化、可解释的科学程序。
+              </div>
+            </div>
+          </div>
+          <div class="bhi-dim-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:50px;padding-top:8px;">
+            <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:15px;">
+                <span style="font-size:18px;">&#x1F3AF;</span>
+                <span style="font-size:0.9rem;font-weight:700;color:#63b3ed;">能力区分度</span>
+              </div>
+              <div style="font-size:0.75rem;line-height:1.6;opacity:0.85;">衡量基准清晰分离模型性能差异的能力</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:15px;">
+                <span style="font-size:18px;">&#x1F6E1;&#xFE0F;</span>
+                <span style="font-size:0.9rem;font-weight:700;color:#68d391;">抗饱和度</span>
+              </div>
+              <div style="font-size:0.75rem;line-height:1.6;opacity:0.85;">衡量天花板效应前剩余的挑战空间与预期寿命</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:15px;">
+                <span style="font-size:18px;">&#x1F30D;</span>
+                <span style="font-size:0.9rem;font-weight:700;color:#b794f4;">影响力</span>
+              </div>
+              <div style="font-size:0.75rem;line-height:1.6;opacity:0.85;">衡量经能力加权的基准采纳程度</div>
+            </div>
+          </div>
+        </div>
+        <div style="width:300px;flex-shrink:0;background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:14px;">
+          <canvas id="bhiDonut" height="300"></canvas>
+        </div>
+      </div>
+
 
       <!-- 堆叠柱状图 -->
       <div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;margin:0 0 24px;">
@@ -187,59 +231,175 @@ section { margin-bottom: 60px; }
   </div>
 </div>
 
-<!-- TAB 2: 评测维度与方法 -->
+<!-- TAB 2: BHI指数计算方法 -->
 <div class="tab-panel" id="panel-method">
   <div class="container" style="max-width:1200px;margin:0 auto 16px;">
     <section>
       <div class="section-header">
         <div class="icon" style="background:linear-gradient(135deg,#2b6cb0,#63b3ed);">&#x1F4D0;</div>
-        <h2>评测维度与方法</h2>
+        <h2>BHI指数计算方法</h2>
       </div>
       <p style="color:#4a5568;font-size:14px;line-height:1.8;margin:12px 0 20px;">
         BHI 沿三个正交互补轴评估基准：(1) <strong style="color:#3182ce">能力区分度</strong>（Capability Discrimination），衡量基准在噪声之上清晰分离模型性能差异的能力；(2) <strong style="color:#38a169">抗饱和度</strong>（Anti-Saturation），衡量天花板效应侵蚀分辨率前剩余的挑战空间与预期寿命；(3) <strong style="color:#805ad5">影响力</strong>（Impact），衡量模型生态系统中经能力加权的基准采纳程度。三个维度指标通过 CRITIC 客观赋权框架合成为 BHI。
       </p>
 
       <!-- BHI 公式 & 权重 -->
-      <div class="formula-box" style="margin-bottom:28px;">
+      <div class="formula-box" style="margin-bottom:32px;">
         <div style="font-size:0.9rem;color:#4a5568;margin-bottom:4px;">BHI 合成公式（CRITIC 客观赋权）</div>
         <div class="formula">BHI(b) = w<sub>Disc</sub> &middot; S<sub>Disc</sub>(b) + w<sub>AS</sub> &middot; S<sub>AS</sub>(b) + w<sub>Imp</sub> &middot; S<sub>Imp</sub>(b)</div>
         <div class="weights" id="weightsTable"></div>
       </div>
 
+      <!-- 前置计算：LOBO 能力校准 -->
+      <div style="background:#f7fafc;border-left:4px solid #2b6cb0;border-radius:8px;padding:16px 20px;margin-bottom:28px;">
+        <h3 style="font-size:15px;color:#2d3748;margin:0 0 8px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">&#x1F50D;</span>
+          前置计算：LOBO 能力校准
+        </h3>
+        <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
+          为避免自引用偏差，所有维度的能力分数均通过 <strong>Leave-One-Benchmark-Out (LOBO)</strong> 策略计算——排除目标基准 b 后，用其余基准数据校准模型能力。
+        </p>
+        <div style="background:#fff;border-radius:6px;padding:12px 16px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
+          <div style="margin-bottom:6px;"><strong>LOBO 调整胜率：</strong></div>
+          <div style="margin-left:12px;color:#4a5568;">WinRate<sub>i</sub><sup>(-b)</sup> = Σ<sub>b'∈B\{b}</sub> (Win<sub>i,b'</sub> + 0.5·Tie<sub>i,b'</sub>) / Σ<sub>b'∈B\{b}</sub> (N<sub>b'</sub> - 1)</div>
+          <div style="margin-top:8px;margin-bottom:6px;"><strong>四次根对数平衡模型：</strong></div>
+          <div style="margin-left:12px;color:#4a5568;">θ<sub>i</sub><sup>(-b)</sup> = Fourth-root Log-Balance(WinRate<sub>i</sub><sup>(-b)</sup>, n<sub>i</sub><sup>(-b)</sup>)</div>
+        </div>
+      </div>
+
       <!-- S_Disc -->
-      <div style="margin-bottom:24px;">
+      <div style="margin-bottom:28px;">
         <h3 style="font-size:16px;color:#2d3748;margin:0 0 8px;display:flex;align-items:center;gap:6px;">
           <span style="display:inline-block;width:4px;height:18px;background:#3182ce;border-radius:2px;"></span>
-          能力区分度 · Capability Discrimination (S<sub>Disc</sub>)
+          能力区分度 · Capability Discrimination Score (S<sub>Disc</sub>)
         </h3>
         <p style="color:#4a5568;font-size:14px;line-height:1.7;margin:0 0 12px;">
-          精准量化基准能否有效分离模型性能差异。区分度高的基准能清晰拉开模型间差距，区分度低的基准则沦为"记忆检测器"。S<sub>Disc</sub> 由 RCV 与 EDR 两项子指标融合而成，融合前先经 Min-Max 归一化再按标准差加权。
+          量化基准 b 在噪声之上清晰分离模型性能差异的能力，通过微观分辨率（EDR）和宏观带宽（RCV）双维度刻画。区分度高的基准能清晰拉开模型间差距，区分度低的基准则沦为"记忆检测器"。
         </p>
-        <div id="dimCards_disc"></div>
+
+        <!-- EDR -->
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
+          <h4 style="font-size:14px;color:#3182ce;margin:0 0 8px;">1. EDR · Effective Differentiation Ratio（有效区分比）</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
+            所有模型对中，性能差距超过噪声过滤阈值的比例，刻画微观分辨率。
+          </p>
+          <div style="background:#f7fafc;border-radius:6px;padding:10px 14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
+            EDR(b) = Σ<sub>1≤i<j≤N</sub> I(|Score<sub>i</sub> - Score<sub>j</sub>| > δ) / [N(N-1)/2]
+          </div>
+          <p style="color:#718096;font-size:12px;margin:8px 0 0;line-height:1.6;">
+            <strong>参数说明：</strong>N = 参与模型数；δ = 0.02·(max(Score) - min(Score)) 为自适应阈值（观测分数范围的2%）；I(·) 为指示函数。
+          </p>
+        </div>
+
+        <!-- RCV -->
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
+          <h4 style="font-size:14px;color:#3182ce;margin:0 0 8px;">2. RCV · Robust Coefficient of Variation（稳健变异系数）</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
+            使用分数分布中间80%（去除极端值）测量有效性能展幅，刻画宏观带宽。
+          </p>
+          <div style="background:#f7fafc;border-radius:6px;padding:10px 14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
+            RCV(b) = [P<sub>90</sub>(Score) - P<sub>10</sub>(Score)] / 100
+          </div>
+          <p style="color:#718096;font-size:12px;margin:8px 0 0;line-height:1.6;">
+            <strong>参数说明：</strong>P<sub>90</sub> 和 P<sub>10</sub> 分别为90分位数和10分位数。
+          </p>
+        </div>
+
+        <!-- SDisc 合成 -->
+        <div style="background:#edf2f7;border-left:4px solid #3182ce;border-radius:8px;padding:14px 18px;">
+          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">S<sub>Disc</sub> 合成公式</h4>
+          <div style="font-family:'Courier New',monospace;font-size:13px;line-height:1.6;color:#2d3748;">
+            S<sub>Disc</sub>(b) = Σ<sub>k∈{EDR,RCV}</sub> w<sub>k</sub> · Norm(k)
+          </div>
+          <p style="color:#4a5568;font-size:12px;margin:8px 0 0;line-height:1.6;">
+            先对 EDR 和 RCV 做 Min-Max 归一化到 [0,1]，权重 w<sub>k</sub> 通过 SDM（标准差加权）计算，基于归一化后的标准差比例分配。
+          </p>
+        </div>
       </div>
 
       <!-- SAS -->
-      <div style="margin-bottom:24px;">
+      <div style="margin-bottom:28px;">
         <h3 style="font-size:16px;color:#2d3748;margin:0 0 8px;display:flex;align-items:center;gap:6px;">
           <span style="display:inline-block;width:4px;height:18px;background:#38a169;border-radius:2px;"></span>
-          抗饱和度 · Anti-Saturation (S<sub>AS</sub>)
+          抗饱和度 · Structural Anti-Saturation (S<sub>AS</sub>)
         </h3>
         <p style="color:#4a5568;font-size:14px;line-height:1.7;margin:0 0 12px;">
-          诊断基准剩余挑战空间与预期寿命。S<sub>AS</sub> = 0.8 &middot; S<sub>Sta</sub> + 0.2 &middot; S<sub>Dyn</sub>，静态权重 80%、动态权重 20%，因短期预测固有不确性较高而赋予较低权重。
+          衡量基准 b 在模型能力演进压力下的结构耐久性（剩余性能提升空间），通过静态抵抗（SSta）和动态预测（SDyn）双维度诊断。
         </p>
-        <div id="dimCards_sat"></div>
+
+        <!-- SSta -->
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
+          <h4 style="font-size:14px;color:#38a169;margin:0 0 8px;">1. S<sub>Sta</sub> · Static Weighted Resistance（静态加权抵抗）</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
+            通过能力加权的方式估计基准难度，使用 LOBO 校准能力分数 θ<sub>i</sub> 对参与者加权。
+          </p>
+          <div style="background:#f7fafc;border-radius:6px;padding:10px 14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
+            S<sub>Sta</sub>(b) = 1 - [Σ<sub>i∈N</sub> Score<sub>i,b</sub>] / [Σ<sub>i∈N</sub> θ<sub>i</sub><sup>(-b)</sup>]
+          </div>
+          <p style="color:#718096;font-size:12px;margin:8px 0 0;line-height:1.6;">
+            <strong>参数说明：</strong>Score<sub>i,b</sub> ∈ [0,1] 为模型 i 在基准 b 的归一化分数；θ<sub>i</sub><sup>(-b)</sup> 为 LOBO 校准能力分数。
+          </p>
+        </div>
+
+        <!-- SDyn -->
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
+          <h4 style="font-size:14px;color:#38a169;margin:0 0 8px;">2. S<sub>Dyn</sub> · Dynamic Saturation Projection（动态饱和度预测）</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
+            通过时间序列趋势模型预测短期内分数膨胀速度，测量未来30天的剩余空间。
+          </p>
+          <div style="background:#f7fafc;border-radius:6px;padding:10px 14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
+            S<sub>Dyn</sub>(b) = max(0, 1 - (Score<sub>b</sub> + 30·k))
+          </div>
+          <p style="color:#718096;font-size:12px;margin:8px 0 0;line-height:1.6;">
+            <strong>参数说明：</strong>Score<sub>b</sub> = 基准 b 当前平均分数；k = 通过最小二乘法拟合的线性趋势斜率（每日分数增量，即征服率）；若 k &lt; 0 则基准未饱和。
+          </p>
+        </div>
+
+        <!-- SAS 合成 -->
+        <div style="background:#f0fff4;border-left:4px solid #38a169;border-radius:8px;padding:14px 18px;">
+          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">S<sub>AS</sub> 合成公式</h4>
+          <div style="font-family:'Courier New',monospace;font-size:13px;line-height:1.6;color:#2d3748;">
+            SAS(b) = 0.8 · S<sub>Sta</sub> + 0.2 · S<sub>Dyn</sub>
+          </div>
+          <p style="color:#4a5568;font-size:12px;margin:8px 0 0;line-height:1.6;">
+            静态权重 80%（稳定观测值），动态权重 20%（短期预测存在固有不确性）。
+          </p>
+        </div>
       </div>
 
       <!-- S_Imp -->
       <div style="margin-bottom:0;">
         <h3 style="font-size:16px;color:#2d3748;margin:0 0 8px;display:flex;align-items:center;gap:6px;">
           <span style="display:inline-block;width:4px;height:18px;background:#805ad5;border-radius:2px;"></span>
-          影响力 · Impact (S<sub>Imp</sub>)
+          影响力 · Capability-Weighted Adoption Impact (S<sub>Imp</sub>)
         </h3>
         <p style="color:#4a5568;font-size:14px;line-height:1.7;margin:0 0 12px;">
-          衡量高能力模型对基准的加权采用程度。S<sub>Imp</sub> 不依赖基准发布日期、模型发布日期或社区元数据，而是通过 LOBO 校准能力分数与平方根覆盖率映射，使影响力度量与原始流行度累积脱钩，更好地反映技术采纳水平。
+          衡量基准 b 通过高能力模型采纳而产生的生态影响力（能力加权采用度），通过 LOBO 校准能力分数与平方根映射实现。
         </p>
-        <div id="dimCards_imp"></div>
+
+        <!-- SImp 公式 -->
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-bottom:12px;">
+          <h4 style="font-size:14px;color:#805ad5;margin:0 0 8px;">能力加权采用率</h4>
+          <p style="color:#4a5568;font-size:13px;line-height:1.7;margin:0 0 10px;">
+            使用 LOBO 校准能力分数加权，通过平方根映射压缩高覆盖基准的主导效应。
+          </p>
+          <div style="background:#f7fafc;border-radius:6px;padding:10px 14px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;color:#2d3748;">
+            S<sub>Imp</sub>(b) = √[Σ<sub>i∈M<sub>bench</sub></sub> θ<sub>i</sub><sup>(-b)</sup> / |M<sub>all</sub>|]
+          </div>
+          <p style="color:#718096;font-size:12px;margin:8px 0 0;line-height:1.6;">
+            <strong>参数说明：</strong>M<sub>bench</sub> = 在基准 b 上报告有效结果的模型集合；M<sub>all</sub> = 完整模型集合；θ<sub>i</sub><sup>(-b)</sup> = LOBO 校准能力分数；√ 为平方根映射，防止高报告基准仅因流行度主导。
+          </p>
+        </div>
+
+        <!-- 设计特点 -->
+        <div style="background:#faf5ff;border-left:4px solid #805ad5;border-radius:8px;padding:14px 18px;">
+          <h4 style="font-size:14px;color:#2d3748;margin:0 0 8px;">设计特点</h4>
+          <ul style="color:#4a5568;font-size:13px;line-height:1.8;margin:0;padding-left:20px;">
+            <li>不依赖基准发布日期、模型发布日期或社区元数据</li>
+            <li>通过 LOBO 校准实现能力分数与原始流行度脱钩</li>
+            <li>取值范围 [0,1]，更好地反映技术采纳水平而非单纯流行度</li>
+          </ul>
+        </div>
       </div>
     </section>
   </div>
@@ -378,6 +538,57 @@ function renderConclusion() {
     }
   });
 
+  // BHI Donut Chart (weights)
+  let donutInstance = null;
+  const donutCtx = document.getElementById('bhiDonut');
+  if (donutCtx) {
+    if (donutInstance) donutInstance.destroy();
+    donutInstance = new Chart(donutCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['能力区分度 wDisc', '抗饱和度 wAS', '影响力 wImp'],
+        datasets: [{
+          data: [WEIGHTS.disc, WEIGHTS.as, WEIGHTS.imp],
+          backgroundColor: ['rgba(49,130,206,0.9)', 'rgba(56,161,105,0.9)', 'rgba(128,90,213,0.9)'],
+          borderColor: '#fff',
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { padding: 8, usePointStyle: true, pointStyle: 'circle', font: { size: 10 } }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(item) {
+                return item.label + '：' + (item.raw * 100).toFixed(2) + '%';
+              }
+            }
+          }
+        }
+      },
+      plugins: [{
+        id: 'donutCenter',
+        afterDraw(chart) {
+          const { ctx, chartArea: { width, height, top, left } } = chart;
+          const cx = left + width / 2;
+          const cy = top + height / 2;
+          ctx.save();
+          ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
+          ctx.fillStyle = '#1a202c';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('BHI 权重', cx, cy);
+          ctx.restore();
+        }
+      }]
+    });
+  }
+
   const tableEl = document.getElementById('top10Table');
   const fmt = v => (v*100).toFixed(2);
 
@@ -470,7 +681,7 @@ function renderConclusion() {
 
   const descEl = document.getElementById('conclusionDesc');
   const t = top10[0];
-  descEl.innerHTML = `<strong>整体评测结果</strong>：${t.name}（BHI = ${fmt(bhiValues[0])}）位列 BHI 榜单第一名。BHI 通过 CRITIC 客观赋权（w<sub>Disc</sub>=${(wDisc*100).toFixed(2)}%, w<sub>AS</sub>=${(wAS*100).toFixed(2)}%, w<sub>Imp</sub>=${(wImp*100).toFixed(2)}%）将能力区分度、抗饱和度、影响力三个正交维度合成为单一健康指数，将评估实践从启发式判断提升为可量化、可解释的科学程序。`;
+  descEl.innerHTML = `<strong>BHI指数排行榜</strong>：${t.name}（BHI = ${fmt(bhiValues[0])}）位列 BHI 榜单第一名。BHI 通过 CRITIC 客观赋权将能力区分度、抗饱和度、影响力三个正交维度合成为单一健康指数，将评估实践从启发式判断提升为可量化、可解释的科学程序。`;
 }
 function renderDimCards() {
   const discEl = document.getElementById('dimCards_disc');
@@ -527,7 +738,6 @@ function renderWeights() {
 /* INIT */
 renderStats();
 renderConclusion();
-renderDimCards();
 renderWeights();
 </script>
 </body>
