@@ -1,0 +1,916 @@
+[1] [Normal] Benchmark Health Index: A Systematic Framework for Benchmarking the Benchmarks of LLMs
+[3] [Normal] Anonymous Author(s)
+[4] [Normal] Affiliation
+[5] [Normal] Address email
+[6] [Heading 1] Abstract
+[7] [Normal] 1 Large Language Models (LLMs) are advancing rapidly, yet the benchmarks used 2 to measure this progress are becoming increasingly unreliable. Score inflation 3 and selective reporting have eroded the authority of standard benchmarks, leaving 4 the community uncertain about which evaluation results remain trustworthy. We 5 introduce the Benchmark Health Index (BHI), a pure data-driven framework
+[8] [Normal] for auditing evaluation sets along three orthogonal and complementary axes: (1)
+[9] [Normal] Capability Discrimination, measuring how sharply a benchmark separates model 8	performance beyond noise; (2) Anti-Saturation, estimating remaining headroom
+[10] [Normal] before ceiling effects erode resolution and thus the benchmark’s expected longevity;
+[11] [Normal] and (3) Impact, measuring capability-weighted benchmark adoption across the
+[12] [Normal] model ecosystem. By distilling 158 validated benchmarks from the technical re-
+[13] [Normal] ports of 117 representative models released between 2025 and April 2026, we 13 systematically characterize the evaluation landscape. BHI is the first framework
+[14] [Normal] to quantify benchmark health at a macro level, providing a well-grounded quan-
+[15] [Normal] titative basis for benchmark selection and supporting the dynamic filtering and 16 continuous updating of evaluation sets. Our comprehensive analysis not only
+[16] [Normal] identifies benchmarks that remain highly credible but also exposes pervasive struc-
+[17] [Normal] tural issues. By establishing a rigorous foundation for selection and management, 19	BHI elevates evaluation practice from heuristic-based judgment to a quantifi20	able and interpretable scientific process. Our code is available online at https: 21	//anonymous.4open.science/r/benchmark-health-index-D84F/
+[18] [Heading 1] 22 1	Introduction
+[19] [Normal] The progress of LLMs is inseparable from bench-
+[20] [Normal] marks [1, 2]. Benchmarks define the trajectory of 25 scientific advancement for the research community
+[21] [Normal] [3, 4], provide capability references for industry,
+[22] [Normal] and offer essential guidance for allocating and opti-
+[23] [Normal] mizing computational resources. Ideally, a bench-
+[24] [Normal] mark should function as a precise measurement
+[25] [Normal] instrument, delivering stable, reproducible, and in31 terpretable discriminative signals across capability
+[26] [Normal] 32 levels [5]. However, the evaluation ecosystem has Figure 1: Top 10 Benchmarks Ranked by BHI 33 exhibited systematic distortions in recent years [6].
+[27] [Normal] 34 Many canonical benchmarks are approaching a compressed performance ceiling [7]: top-tier models 35 cluster within a narrow score band, so small gaps are often driven by statistical noise rather than
+[28] [Normal] substantive architectural differences. Moreover, under selective reporting and marketing-oriented
+[29] [Normal] practices, citation frequency no longer reliably reflects technical rigor or the long-term evaluative
+[30] [Normal] Submitted to 40th Conference on Neural Information Processing Systems (NeurIPS 2026). Do not distribute.
+[32] [Normal] Figure 2: Overview of BHI Framework. Top Row: Three challenges characterize current benchmarks: weak discrimination, performance saturation, and popularity–adoption decoupling. Middle Row: We introduce three data-driven metrics: SDisc quantifies benchmark sensitivity, SAS assesses challenge headroom, and SImp measures capability-weighted adoption across the model ecosystem. Bottom Row: The final BHI score is synthesized through objective weighting.
+[33] [Normal] utility of a benchmark [8]. These trends call for a shift from model-centric comparison to benchmark39 centric auditing [9], treating benchmarks as public infrastructure with a lifecycle and quantitatively 40 testing their validity and degradation dynamics.
+[34] [Normal] Current work has laid important foundations in holistic evaluation frameworks [10, 11], dataset
+[35] [Normal] construction quality [12], and cross-benchmark consistency [13]. Yet most existing approaches
+[36] [Normal] remain limited to static specifications or local consistency analyses, lacking an actionable, quantitative,
+[37] [Normal] and reproducible yardstick for horizontal comparison and full-lifecycle management of benchmarks 45 at the ecosystem scale. The community thus needs a global metric system for benchmark health: 46 one that not only quantifies a benchmark’s current discriminative capability, but also evaluates its 47 remaining effective and ecological impact, providing a quantifiable basis for benchmark selection.
+[38] [Normal] 48 Formalizing benchmark health faces three technical challenges: (1) Low Discrimination & Score 49 Compression: many benchmarks can no longer clearly separate strong models because their scores 50 are compressed near the top; (2) Ceiling Effect & Lack of Headroom: as benchmark data is 51 absorbed into training or repeatedly optimized for, the remaining challenge space shrinks, weakening 52 long-term progress tracking; and (3) Popularity Bias & Adoption Decoupling: frequent citation or 53 reporting does not necessarily mean that a benchmark is widely adopted by high-capability models 54 or remains technically informative. Together, these issues lead the community to overuse outdated 55 benchmarks and overlook more valuable ones.
+[39] [Normal] To address this, we introduce Benchmark Health Index, a data-driven auditing framework that char-
+[40] [Normal] acterizes benchmark validity and usability across three dimensions: (1) Capability Discrimination,
+[41] [Normal] which measures whether a benchmark can clearly separate stronger models from weaker ones; (2)
+[42] [Normal] Anti-Saturation, which evaluates whether a benchmark still remains challenging for current frontier
+[43] [Normal] models and is unlikely to be exhausted soon; and (3) Impact, which measures whether a bench-
+[44] [Normal] mark is widely adopted by high-capability models in real evaluation practice. By aggregating these, 62 BHI identifies effective benchmarks, demotes saturated tests to basic sanity checks, and designates 63 high-difficulty anchors for frontier capability tracking.
+[45] [Normal] 64 We conducted a systematic meta-analysis of 158 benchmarks extracted from the technical reports of 65 117 representative LLMs released between 2025 and April 2026. Our study distinguishes effective 66 benchmarks that retain high discriminative power from those that, despite being widely used, have 67 become obsolete. Furthermore, we provide a systematic examination of benchmark distribution and 68 evolutionary trends across diverse task domains.
+[46] [Normal] Our contributions are summarized as follows:
+[47] [Normal] • We propose the BHI framework, which quantifies benchmark effectiveness and longevity 71	along three dimensions: Capability Discrimination, Anti-Saturation, and Impact.
+[48] [Normal] 72 • We establish an objective, data-driven auditing protocol that implements a Leave-One73 Benchmark-Out calibration strategy and automated weighting mechanisms to eliminate 74 subjective bias and ensure methodological rigor.
+[49] [Normal] 75 • Through large-scale meta-analysis and diagnostic case studies over 117 models and 158 76 benchmarks, we show that BHI separates saturated from frontier benchmarks, explains their 77 degradation patterns, and offers actionable guidance for benchmark governance.
+[50] [Heading 1] 78 2	Related Work
+[51] [Normal] 79 The rapid evolution of LLMs has catalyzed a paradigm shift in evaluation, transitioning from static, 80 model-centric leaderboards to holistic benchmark suites for multi-dimensional capabilities [1, 4, 14].
+[52] [Normal] However, current benchmarks are plagued by severe score inflation and upper-tail compression
+[53] [Normal] [8, 15]. Despite ongoing efforts to mitigate benchmark degradation and data contamination [16–18],
+[54] [Normal] a unified diagnostic framework to monitor benchmark efficacy over time remains elusive [19, 20]. To
+[55] [Normal] address this gap, we propose a systematic framework to quantify benchmark capability, enabling high85 resolution efficacy measurement throughout the dynamic co-evolution of benchmarks and models. A
+[56] [Normal] 86 more comprehensive discussion of related work is provided in Appendix B
+[57] [Heading 1] 87 3	Methodology
+[58] [Normal] 88 The BHI is constructed through a data-driven aggregation of three distinct evaluation axes. In this 89 section, we define the mathematical formulations and explain the statistical rationale for each metric.
+[59] [Normal] 3.1	Capability Discrimination (SDisc)
+[60] [Normal] SDisc quantifies a benchmark b ∈ B’s resolution in distinguishing latent model performance through
+[61] [Normal] micro-resolution and macro-bandwidth. All model scores are pre-normalized to a [0,100] scale for 93 consistency.
+[62] [Normal] 3.1.1	Effective Differentiation Ratio (EDR)
+[63] [Normal] EDR measures micro-resolution as the proportion of all possible pairwise combinations of models 96 whose performance gap exceeds a noise-filtering threshold. For N models, it is defined as:
+[64] [Normal] P1≤i<j≤N I(|Scorei − Scorej| > δ)
+[65] [Normal] EDR(b) =		(1) N(N − 1)/2
+[66] [Normal] 97 where δ = 0.02 · (max(Score) − min(Score)) is an adaptive threshold representing 2% of the 98 observed score range. Sensitivity analysis, as detailed in Appendix C, confirms that SDisc is highly 99 robust across δ ∈ [0.5%,5.0%], ensuring it captures intrinsic discriminative signals rather than 100 measurement noise.
+[67] [Normal] 3.1.2	Robust Coefficient of Variation (RCV)
+[68] [Normal] RCV characterizes macro-bandwidth by measuring the effective performance spread using the 103 middle 80% of the score distribution for the N models, thereby mitigating the influence of extreme
+[69] [Normal] 104 outliers:
+[70] [Normal] P90(Score) − P10(Score)
+[71] [Normal] RCV (b) =		(2)
+[72] [Normal] 100
+[73] [Normal] 105
+[74] [Normal] 3.1.3	Normalization
+[75] [Normal] Prior to final fusion, we apply min-max normalization to both EDR and RCV to map them onto a 108 common interval [0,1]. To ensure the final score accurately reflects the informative contribution of
+[77] [Normal] Figure 3: The BHI Data Architecture. (a) The systematic process of data construction. (b) The taxonomic distribution of the validated benchmark set across 13 functional domains. (c) The distribution of evaluated models across diverse global AI vendors.
+[78] [Normal] 109 each metric, we aggregate these indicators using Standard Deviation-based Weighting (SDM). This 110 approach amplifies relative contrast while mitigating statistical variance shrinkage in benchmarks 111 with sparse model coverage. The final score for benchmark b is computed as:
+[79] [Normal] SDisc(b) =	X	wk · Norm(k)	(3)
+[80] [Normal] k∈{EDR,RCV }
+[81] [Normal] 112 Detailed mathematical derivations for the SDM weighting and the normalization process are provided 113 in Appendix D.
+[82] [Normal] 3.2	Model Capability Calibration
+[83] [Normal] To provide a fair reference for Anti-Saturation (Section 3.3) and Impact (Section 3.4), we establish 116 a system to calibrate model capabilities. To prevent self-referential bias caused by evaluating
+[84] [Normal] a benchmark using model strengths derived from the same data pool, we implement a Leave-
+[85] [Normal] (−b)
+[86] [Normal] One-Benchmark-Out (LOBO) strategy where capability scores θi for any target benchmark 119 b ∈ B are calculated strictly using data from the remaining B \ {b} benchmarks, thereby ensuring 120 methodological independence through out-of-sample evaluation.
+[87] [Normal] 3.2.1	LOBO-adjusted Win Rate.
+[88] [Normal] We leverage a pairwise battle mechanism to ensure a robust and unified standardization of scores
+[89] [Normal] across the diverse array of metrics. For model i on benchmark b, its LOBO-adjusted Win Rate
+[90] [Normal] ) represents the average probability of defeating all opponents across the set of benchmarks 125 excluding b:
+[91] [Normal] Pb′∈B\{b}(Nb′ − 1)	(4)
+[92] [Normal] 126 where Wini,b′ and Tiei,b′ denote the number of wins and ties of model i on benchmark b′, and Nb′ is 127 the total number of models evaluated on b′. This win rate ensures consistency across heterogeneous 128 evaluation scales.
+[93] [Normal] 3.2.2	The Fourth-root Log-Balance Model.
+[94] [Normal] We integrate the win rate with the model’s participation density to ensure that capability scores 131 rigorously reflect both model performance and statistical reliability. For benchmark b, the calibrated 132 capability of model i ∈ N is defined as:
+[95] [Normal] (5)
+[96] [Normal] (−b)
+[97] [Normal] 133 where ni	is the number of benchmarks model i has participated in within the LOBO reference 134 pool B \ {b}, and NB is the total number of benchmarks in that reference pool (i.e., |B| − 1). The 135 constant 1 is added to logarithmic terms for numerical stability.
+[98] [Normal] 3.3	Anti-Saturation (SAS)
+[99] [Normal] Anti-saturation characterizes the structural durability of a benchmark b ∈ B by measuring its
+[100] [Normal] remaining performance headroom under the pressure of evolving model capabilities. This dimen-
+[101] [Normal] sion is decomposed into two components: Static Weighted Resistance and Dynamic Saturation 140 Projection.
+[102] [Normal] 3.3.1	Static Weighted Resistance (SSta)
+[103] [Normal] SSta estimates a benchmark’s difficulty by capability-weighting the score distribution. We utilize
+[104] [Normal] (explained in Section 3.2) to evaluate benchmark difficulty relative to the strength of its 144 participants. The static resistance is defined as:
+[105] [Normal] Pi∈N Score
+[106] [Normal] SSta(b) = 1 −	Pi∈N θi(−b)	(6)
+[107] [Normal] 145 where Scorei,b ∈ [0,1] denotes the normalized performance. This weighted approach applies 146 differential penalties to the remaining headroom, whereby scores from low-capability models induce 147 a more pronounced reduction in SSta while those from frontier models are comparatively preserved.
+[108] [Normal] 148 Normalizing by further eliminates the influence of participant volume, ensuring that SSta 149 remains invariant to the total number of evaluated models.
+[109] [Normal] 3.3.2	Dynamic Saturation Projection (SDyn)
+[110] [Normal] SDyn measures the short-term velocity of	Humanity's Last Exam	MMLU-Pro
+[111] [Normal] score inflation by projecting near-future per-
+[112] [Normal] formance under a time-series trend model. We 154 fit a linear trend y = k · t + d using Ordinary 155 Least Squares, as shown in Figure 4, where the
+[113] [Normal] 156 slope k represents the conquest rate (score 157 increment per day). Using a 30-day projection 158 window, the dynamic saturation is defined as:
+[114] [Normal] SDyn(b) = max(0,1−(Scoreb+30·k)) (7)
+[115] [Normal] 159 where Scoreb is the current mean score of 160 benchmark b. If k < 0, typically indicating
+[116] [Normal] b is computed as:
+[117] [Normal] SAS(b) = 0.8 · SSta + 0.2 · SDyn	(8)
+[118] [Normal] We assign a lower weight (20%) to SDyn due to the inherent uncertainty of short-term projections, 167 while the static component provides a stable observation of the current saturation status.
+[119] [Normal] Table 1: BHI Metrics and Sub-metric Decomposition for Representative Benchmarks
+[121] [Normal] Rank	Benchmark	SDisc (RCV , EDR)	SAS (SSta, SDyn)	SImp (NUsage)	BHI
+[122] [Normal] 1	Humanity’s Last Exam[21]	0.6608 (0.2954, 0.9131)	0.6299 (0.6211, 0.6653)	0.7710 (56)	0.6846
+[123] [Normal] 0.8130 (0.4599, 0.9347)	0.5043 (0.5011, 0.5169) 0.8042 (0.4490, 0.9365)	0.3281 (0.3200, 0.3607) 0.5205 (0.1925, 0.8000)	0.8687 (0.8594, 0.9059) 0.6923 (0.3445, 0.8889)	0.1154 (0.1122, 0.1284) 0.9005 (0.6419, 0.7800)	0.1108 (0.1058, 0.1309) 0.5962 (0.2219, 0.9111)	0.3362 (0.3479, 0.2897) 0.4572 (0.1443, 0.7520)	0.1727 (0.1704, 0.1822) 0.5520 (0.1243, 1.0000)	0.1669 (0.1710, 0.1508)
+[124] [Normal] 0.3920 (0.1368, 0.6222)	0.0865 (0.0835, 0.0989)
+[126] [Normal] 3.4	Impact (SImp)
+[127] [Normal] SImp measures the ecological influence of a benchmark b ∈ B through its adoption by capable 170 models. Rather than relying on raw popularity signals such as repository stars, downloads, or 171 historical citation momentum, we define impact as capability-weighted evaluation coverage within 172 the model ecosystem.
+[128] [Normal] 3.4.1	Capability-weighted Adoption
+[129] [Normal] Let Mbench ⊆ Mall denote the set of models that have reported valid evaluation results on benchmark 175 b, where Mall is the full set of models in the dataset. A model is considered to participate in b if it 176 reports a valid score, regardless of the score magnitude.
+[130] [Normal] 177 To avoid circularity, we use the LOBO-calibrated capability score defined in Section 3.2, which 178 is computed by excluding benchmark b from the capability estimation process. The raw capability 179 coverage of benchmark b is defined as:
+[131] [Normal] .	(9)
+[132] [Normal] 181 The square-root mapping compresses the upper range of the coverage ratio, preventing highly reported 182 benchmarks from dominating solely due to participation volume, while still preserving the advantage 183 of benchmarks evaluated by high-capability models.
+[133] [Normal] 3.4.2	Interpretation
+[134] [Normal] This formulation captures impact as capability-weighted adoption. A benchmark receives a high 186 SImp when a substantial portion of the ecosystem’s calibrated model capability is represented among 187 its evaluated participants. Because the capability scores are computed using LOBO calibration, the 188 benchmark being assessed does not contribute to the capability estimates used to measure its own 189 impact.
+[135] [Normal] By construction, SImp is bounded within [0,1] and does not depend on benchmark release dates,
+[136] [Normal] model release dates, community metadata, or heuristic temporal decay. This design makes the impact 192 score less sensitive to raw popularity accumulation and better aligned with the technical adoption of 193 benchmarks by capable models.
+[137] [Heading 1] 194 4	Data Pipeline
+[138] [Normal] 195 As illustrated in Figure 3, we implement a multi-stage pipeline to distill a high-fidelity benchmark 196 suite from an initial corpus of 416 candidate evaluation sets, systematically aggregated from the 197 technical reports of 117 mainstream models released between 2025 and April 2026. The workflow
+[139] [Normal] 198 (Figure 3a) encompasses rigorous alignment protocols, including a minimum participation threshold 199 for statistical validity, score normalization to a [0,100] range, and a 1.25× headroom calibration
+[140] [Normal] 200 for open-ended metrics to mitigate potential ceiling effects. After specialized handling for temporal 201 snapshots and tool-augmented benchmarks, we retain a final set of 158 validated benchmarks spanning
+[141] [Normal] 202 diverse domains and vendors (Figure 3b–c). For brevity, the exhaustive details regarding the filtering, 203 normalization, and calibration methodologies are provided in Appendix E. The complete metadata is 204 publicly available at our anonymous repository.
+[142] [Heading 1] 205 5	Results and Validation
+[143] [Normal] 5.1	Main BHI Results
+[144] [Normal] The final BHI is synthesized from the three primary dimensions introduced in Section 3: SDisc,
+[145] [Normal] SAS, and SImp. In this process, the SAS and SImp axes are adjusted by the Model Capability 209 Calibration component—derived from the LOBO-adjusted win rate—to transform heterogeneous 210 benchmark-level signals into a unified health score.
+[146] [Normal] 211 We utilize the CRITIC objective weighting framework, as detailed in Appendix F, for the final index 212 aggregation to maintain a consistent data-driven formulation. This method determines the importance
+[147] [Normal] of each dimension by evaluating its internal information volume, measured by contrast intensity,
+[148] [Normal] and its degree of independence, measured by conflicting character, within the global distribution of 215 158 benchmarks. Under this framework, the optimized weighting distribution is 32.63% for SDisc, 216 35.74% for SAS, and 31.63% for SImp, resulting in the final formulation:
+[149] [Normal] BHI(b) = wDisc · SDisc(b) + wAS · SAS(b) + wImp · SImp(b)	(11)
+[150] [Normal] 217 Representative scores and rankings are summarized in Table 1, while the comprehensive rankings for 218 the complete set of 158 benchmarks are provided in Table 12. Overall, the resulting ranking reflects a 219 balance between technical resolution, saturation resistance, and capability-weighted adoption, rather 220 than optimizing for any single benchmark property.
+[151] [Normal] 5.2	Component Necessity: Ablation Study
+[152] [Normal] To assess the necessity of each component in the BHI formulation, we conduct an ablation study 223 by removing one indicator at a time and recomputing the final ranking. The ranking differences are 224 measured relative to the full model using average and maximum absolute rank shifts.
+[153] [Normal] in identifying unsaturated benchmarks. Re-
+[154] [Normal] moving SDisc produces a comparable average
+[155] [Normal] shift, highlighting the importance of discrim-	SAS
+[156] [Normal] inative resolution. Although removing SImp	SImp	11.34	66
+[158] [Normal] yields a smaller average shift, it still introduces
+[159] [Normal] significant benchmark-level corrections, confirming that capability-weighted adoption contributes 235 non-trivially to the final ranking.
+[160] [Normal] 236 These results demonstrate that all three components are necessary and jointly define the BHI frame237 work.
+[161] [Normal] 5.3	Component Complementarity: Indicator Orthogonality
+[162] [Normal] We further analyze the relationships between the three indicators using both Pearson and Spearman 240 correlation coefficients. The results are visualized in Figure 5.
+[163] [Normal] 241 The correlation analysis shows that the indicators are complementary rather than redundant. The 242 strongest association occurs between SDisc and SAS (Spearman ρ = 0.46), which is expected since 243 highly saturated benchmarks tend to exhibit reduced discriminative resolution. However, all pairwise
+[164] [Normal] Indicator Orthogonality Analysis
+[165] [Normal] Pearson	Spearman
+[167] [Normal] Figure 5: Indicator correlation analysis using Pearson (left) and Spearman (right) coefficients.
+[168] [Normal] 244 correlations remain below 0.5, and SImp shows consistently weak correlations with both technical 245 indicators.
+[169] [Normal] 246 This indicates that SImp captures an adoption-oriented signal distinct from benchmark difficulty and 247 discrimination, while SDisc and SAS provide related but non-identical views of benchmark quality. 248 Overall, the results confirm that the three components encode complementary aspects of benchmark 249 health.
+[170] [Normal] 250 Robustness and Sensitivity. We evaluate the robustness of the proposed framework under multiple 251 perturbations, including score noise, model dropout, parameter variation, and aggregation schemes. 252 Under Gaussian noise (σ ∈ [0.01,0.2]), the resulting rankings remain stable, with Spearman cor-
+[171] [Normal] relations remaining above 0.9 under moderate perturbation and degrading only gradually as the
+[172] [Normal] noise level increases; detailed settings and results are provided in Appendix G. Similarly, random 255 model dropout from 5% to 60% produces only gradual ranking degradation, indicating resilience to 256 incomplete evaluation coverage; the full dropout results are also reported in Appendix G.
+[173] [Normal] 257 We further analyze sensitivity to key design choices in the anti-saturation component. Varying 258 the static/dynamic weighting in SAS and the temporal projection window used in SDyn produces 259 negligible changes in the final ranking, with Spearman correlations above 0.99 across all tested 260 configurations, as detailed in Appendix H. In addition, the EDR threshold used in SDisc is varied
+[174] [Normal] across δ ∈ [0.5%,5.0%], and the resulting rankings remain highly consistent with the default setting;
+[175] [Normal] this threshold sensitivity analysis is provided in Appendix C. We also compare the CRITIC objective 263 weighting scheme with uniform weighting and observe that CRITIC yields consistently more stable 264 rankings under both noise injection and model dropout, supporting its use as a data-driven aggregation 265 strategy; the comparative results are included in Appendix G.
+[176] [Normal] 266 To examine potential bias from data availability, we analyze the relationship between benchmark 267 coverage and BHI scores. Although coverage is strongly correlated with SImp by construction, its
+[177] [Normal] correlation with SDisc and SAS remains weak, and the overall correlation with BHI is moderate,
+[178] [Normal] indicating that the final ranking is not dominated by benchmark popularity or evaluation frequency; 270 detailed coverage-bias results are reported in Appendix I. Overall, these results demonstrate that the 271 BHI framework is robust to score noise, model sparsity, parameter choices, and coverage variation.
+[179] [Heading 1] 272 6	External Validation and Case Study
+[180] [Normal] To examine whether BHI is consistent with external evidence, we conduct a diagnostic case study
+[181] [Normal] using two benchmark cohorts defined independently of the BHI computation. The known-saturated 275 cohort includes benchmarks widely regarded as losing frontier-level diagnostic value due to ceiling 276 effects, score compression, leakage concerns, or replacement by stronger successors, while the
+[182] [Normal] 277 active frontier cohort includes benchmarks that remain in recent frontier-model reports for reasoning, 278 browsing, coding, and agentic evaluation. These cohort labels are used only for validation and are 279 never used to compute BHI scores.
+[183] [Normal] Figure 6 provides a temporal check:	known-
+[184] [Normal] saturated benchmarks show reduced presence in 282 recent frontier reports, whereas active frontier 283 benchmarks remain in contemporary evaluation 284 practice. Table 3 further shows a clear separation 285 between the two groups, with known-saturated 286 benchmarks averaging 0.227 ± 0.048 and active 287 frontier benchmarks averaging 0.600 ± 0.038. 288 This supports directional consistency with external 289 practice, though it should be interpreted as face 290 validity rather than calibration against an absolute 291 ground-truth health score.
+[185] [Normal] Figure 6: Temporal adoption patterns of known-
+[186] [Normal] The component decomposition further explains saturated and active frontier benchmarks.
+[187] [Normal] why benchmarks receive low BHI scores. Hel-
+[188] [Normal] laSwag and ARC-Challenge are mainly penalized by severe ceiling effects, reflected in extremely low
+[189] [Normal] SAS. HumanEval and MBPP retain some discriminative signal but have low anti-saturation scores,
+[190] [Normal] suggesting that function-level coding tasks have largely been absorbed by contemporary training and 297 evaluation practice. C-Eval degrades across all three axes, consistent with its reduced reliability as 298 a modern subject-knowledge benchmark. Importantly, GSM8K and MMLU still retain non-trivial
+[191] [Normal] SImp, indicating that their low BHI scores are not merely caused by low visibility or sparse reporting,
+[192] [Normal] but are mainly saturation-driven. This decomposition shows that BHI not only ranks benchmarks,
+[193] [Normal] but also distinguishes failure modes including saturation-driven obsolescence, weak adoption, and 302 reduced discrimination.
+[194] [Normal] Table 3: BHI Distribution Across Known-Saturated and Active Frontier Benchmark Cohorts
+[195] [Normal] 303 Overall, these case studies support BHI as a data-driven benchmark auditing framework whose 304 outputs align with external evaluation practice while remaining interpretable at the component level.
+[196] [Normal] 305 More detailed domain-specific analyses are provided in Appendix J.
+[197] [Heading 1] 306 7	Conclusion
+[198] [Normal] This paper introduces the Benchmark Health Index (BHI), a data-driven framework for auditing
+[199] [Normal] LLM benchmarks at the ecosystem level. Unlike conventional model-centric leaderboards, BHI treats
+[200] [Normal] benchmarks themselves as objects of evaluation and quantifies their health through discrimination, 310 anti-saturation, and capability-weighted adoption. Based on large-scale public technical reports, 311 BHI produces interpretable benchmark rankings and reveals current failure modes in the evaluation 312 ecosystem. Validation further shows that its components are necessary, complementary, and stable. 313 Overall, BHI provides a reproducible quantitative basis for benchmark selection, lifecycle monitoring, 314 and systematic benchmark governance.
+[201] [Heading 1] 315 References
+[202] [Normal] 316 [1] Percy Liang, Rishi Bommasani, Tony Lee, et al. Holistic evaluation of language models. 317 Transactions on Machine Learning Research, 2023. ISSN 2835-8856. URL https:// 318 openreview.net/forum?id=iO4LZibEqW. Featured Certification, Expert Certification.
+[203] [Normal] 319 [2] Zhuohang Jiang, Pangjing Wu, Ziran Liang, et al. Hibench: Benchmarking llms capability 320 on hierarchical structure reasoning. In Proceedings of the 31st ACM SIGKDD Conference on
+[204] [Normal] 321 Knowledge Discovery and Data Mining V.2, KDD ’25, page 5505–5515, New York, NY, USA, 322 2025. Association for Computing Machinery. ISBN 9798400714542. doi: 10.1145/3711896. 323 3737378. URL https://doi.org/10.1145/3711896.3737378.
+[205] [Normal] 324 [3] Alex Wang, Amanpreet Singh, Julian Michael, et al. GLUE: A multi-task benchmark and 325 analysis platform for natural language understanding. In Tal Linzen, Grzegorz Chrupała, and 326 Afra Alishahi, editors, Proceedings of the 2018 EMNLP Workshop BlackboxNLP: Analyzing 327 and Interpreting Neural Networks for NLP, pages 353–355, Brussels, Belgium, November 328 2018. Association for Computational Linguistics. doi: 10.18653/v1/W18-5446. URL https: 329 //aclanthology.org/W18-5446/.
+[206] [Normal] [4] Aarohi Srivastava, Abhinav Rastogi, Abhishek Rao, et al. Beyond the imitation game: Quan-
+[207] [Normal] tifying and extrapolating the capabilities of language models. Transactions on Machine 332 Learning Research, 2023. ISSN 2835-8856. URL https://openreview.net/forum?id= 333 uyTL5Bvosj. Featured Certification.
+[208] [Normal] 334 [5] Marco Tulio Ribeiro, Tongshuang Wu, Carlos Guestrin, and Sameer Singh. Beyond ac335 curacy: Behavioral testing of NLP models with CheckList. In Dan Jurafsky, Joyce Chai, 336 Natalie Schluter, and Joel Tetreault, editors, Proceedings of the 58th Annual Meeting 337 of the Association for Computational Linguistics, pages 4902–4912, Online, July 2020. 338 Association for Computational Linguistics. doi: 10.18653/v1/2020.acl-main.442. URL 339 https://aclanthology.org/2020.acl-main.442/.
+[209] [Normal] [6] Douwe Kiela, Max Bartolo, Yixin Nie, et al. Dynabench: Rethinking benchmarking in NLP.
+[210] [Normal] In Kristina Toutanova, Anna Rumshisky, Luke Zettlemoyer, et al., editors, Proceedings of
+[211] [Normal] the 2021 Conference of the North American Chapter of the Association for Computational 343 Linguistics: Human Language Technologies, pages 4110–4124, Online, June 2021. Association 344 for Computational Linguistics. doi: 10.18653/v1/2021.naacl-main.324. URL https:// 345 aclanthology.org/2021.naacl-main.324/.
+[212] [Normal] 346 [7] Alex Wang, Yada Pruksachatkun, Nikita Nangia, et al. SuperGLUE: a stickier benchmark for 347 general-purpose language understanding systems. Curran Associates Inc., Red Hook, NY,
+[213] [Normal] USA, 2019.
+[214] [Normal] [8] Jacob Haimes, Cenny Wenner, Kunvar Thaman, et al. Benchmark inflation: Revealing llm 350 performance gaps using retro-holdouts. In ICML 2024 Workshop on Data-centric Machine
+[215] [Normal] 351 Learning Research (DMLR): Datasets for Foundation Models, Vienna, Austria, July 2024. 352 URL https://icml.cc/virtual/2024/36410. Poster presentation. arXiv:2410.09247.
+[216] [Normal] 353 [9] Mostafa Dehghani, Yi Tay, Alexey A. Gritsenko, et al. The benchmark lottery, 2021. URL 354 https://arxiv.org/abs/2107.07002.
+[217] [Normal] 355 [10] Omar Alonso and Kenneth Church. Evaluating the evaluations: A perspective on benchmarks. 356 SIGIR Forum, 58(2):1–27, March 2025. ISSN 0163-5840. doi: 10.1145/3722449.3722467. 357 URL https://doi.org/10.1145/3722449.3722467.
+[218] [Normal] 358 [11] Mahmoud Mohammadi, Yipeng Li, Jane Lo, and Wendy Yip. Evaluation and benchmarking 359 of llm agents: A survey. In Proceedings of the 31st ACM SIGKDD Conference on Knowledge
+[219] [Normal] 360 Discovery and Data Mining V.2, KDD ’25, page 6129–6139, New York, NY, USA, 2025. 361 Association for Computing Machinery. ISBN 9798400714542. doi: 10.1145/3711896.3736570. 362 URL https://doi.org/10.1145/3711896.3736570.
+[220] [Normal] [12] Camille Thibault, Jacob-Junqi Tian, Gabrielle Péloquin-Skulski, et al. A guide to misin-
+[221] [Normal] formation detection data and evaluation. In Proceedings of the 31st ACM SIGKDD Con-
+[222] [Normal] ference on Knowledge Discovery and Data Mining V.2, KDD ’25, page 5801–5809, New 366 York, NY, USA, 2025. Association for Computing Machinery. ISBN 9798400714542. doi: 367 10.1145/3711896.3737437. URL https://doi.org/10.1145/3711896.3737437.
+[223] [Normal] 368 [13] Riccardo Lunardi, Vincenzo Della Mea, Stefano Mizzaro, and Kevin Roitero. On robustness 369 and reliability of benchmark-based evaluation of llms, 2025. URL https://arxiv.org/ 370 abs/2509.04013.
+[224] [Normal] 371 [14] Mingzhe Xing, Rongkai Zhang, Hui Xue, et al. Understanding the weakness of large language 372 model agents within a complex android environment. In Proceedings of the 30th ACM SIGKDD 373 Conference on Knowledge Discovery and Data Mining, KDD ’24, page 6061–6072, New 374 York, NY, USA, 2024. Association for Computing Machinery. ISBN 9798400704901. doi: 375 10.1145/3637528.3671650. URL https://doi.org/10.1145/3637528.3671650.
+[225] [Normal] 376	[15] Hongli Zhou, Hui Huang, Ziqing Zhao, et al. Lost in benchmarks? rethinking large language 377	model benchmarking with item response theory. In Proceedings of the AAAI Conference on 378	Artificial Intelligence, 2026. URL https://arxiv.org/abs/2505.15055.
+[226] [Normal] [16] Yucheng Li, Yunhao Guo, Frank Guerin, and Chenghua Lin. An open-source data contami-
+[227] [Normal] nation report for large language models. In Yaser Al-Onaizan, Mohit Bansal, and Yun-Nung 381 Chen, editors, Findings of the Association for Computational Linguistics: EMNLP 2024, pages
+[228] [Normal] 382 528–541, Miami, Florida, USA, November 2024. Association for Computational Linguis383 tics. doi: 10.18653/v1/2024.findings-emnlp.30. URL https://aclanthology.org/2024. 384 findings-emnlp.30/.
+[229] [Normal] [17] Simon Ott, Adriano Barbosa-Silva, Kathrin Blagec, Jan Brauner, and Matthias Samwald.
+[230] [Normal] Mapping global dynamics of benchmark creation and saturation in artificial intelligence. 387 Nature Communications, 13(1):6793, 2022.
+[231] [Normal] 388 [18] Chunyuan Deng, Yilun Zhao, Xiangru Tang, Mark Gerstein, and Arman Cohan. Investigat389 ing data contamination in modern benchmarks for large language models. In Kevin Duh,
+[232] [Normal] 390 Helena Gomez, and Steven Bethard, editors, Proceedings of the 2024 Conference of the 391 North American Chapter of the Association for Computational Linguistics: Human Language 392 Technologies (Volume 1: Long Papers), pages 8706–8719, Mexico City, Mexico, June 2024. 393 Association for Computational Linguistics. doi: 10.18653/v1/2024.naacl-long.482. URL 394 https://aclanthology.org/2024.naacl-long.482/.
+[233] [Normal] 395 [19] Qi Qian, Chengsong Huang, Jingwen Xu, et al. Benchmark2: Systematic evaluation of LLM 396 benchmarks. arXiv preprint arXiv:2601.03986, 2026. doi: 10.48550/arXiv.2601.03986. URL 397 https://arxiv.org/abs/2601.03986.
+[234] [Normal] 398 [20] Timothy R. McIntosh, Teo Susnjak, Nalin Arachchilage, et al. Inadequacies of large language 399 model benchmarks in the era of generative artificial intelligence. IEEE Transactions on 400 Artificial Intelligence, 7(1):22–39, 2026. doi: 10.1109/TAI.2025.3569516.
+[235] [Normal] [21] Long Phan, Alice Gatti, Ziwen Han, et al.	Humanity’s last exam, 2025.	URL https:
+[236] [Normal] //arxiv.org/abs/2501.14249.
+[237] [Normal] [22] Jason Wei, Nguyen Karina, Hyung Won Chung, et al. Measuring short-form factuality in large 404	language models, 2024. URL https://arxiv.org/abs/2411.04368.
+[238] [Normal] 405 [23] Jason Wei, Zhiqing Sun, Spencer Papay, et al. Browsecomp: A simple yet challenging 406 benchmark for browsing agents, 2025. URL https://arxiv.org/abs/2504.12516.
+[239] [Normal] 407 [24] Jonathan Roberts, Mohammad Reza Taesiri, Ansh Sharma, et al. Zerobench: An impossible 408 visual benchmark for contemporary large multimodal models, 2025. URL https://arxiv. 409 org/abs/2502.09696.
+[240] [Normal] [25] Yifan Zhang and Team Math-AI. American invitational mathematics examination (aime) 2025,
+[241] [Normal] 2025.
+[242] [Normal] [26] Victor Barres, Honghua Dong, Soham Ray, Xujie Si, and Karthik Narasimhan. τ2-bench:
+[243] [Normal] Evaluating conversational agents in a dual-control environment, 2025. URL https://arxiv. 414 org/abs/2506.07982.
+[244] [Normal] [27] Tejal Patwardhan, Rachel Dias, Elizabeth Proehl, et al. Gdpval: Evaluating ai model perfor-
+[245] [Normal] mance on real-world economically valuable tasks, 2025. URL https://arxiv.org/abs/ 417 2510.04374.
+[246] [Normal] [28] Yubo Wang, Xueguang Ma, Ge Zhang, et al. Mmlu-pro: a more robust and challenging multi-
+[247] [Normal] task language understanding benchmark. In Proceedings of the 38th International Conference 420 on Neural Information Processing Systems, NIPS ’24, Red Hook, NY, USA, 2024. Curran 421 Associates Inc. ISBN 9798331314385.
+[248] [Normal] 422	[29] Jiawei Liu, Chunqiu Steven Xia, Yuyao Wang, and Lingming Zhang. Is your code generated 423	by chatgpt really correct? rigorous evaluation of large language models for code generation. In 424	Proceedings of the 37th International Conference on Neural Information Processing Systems, 425	NIPS ’23, Red Hook, NY, USA, 2023. Curran Associates Inc.
+[249] [Normal] 426 [30] Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, et al. Training verifiers to solve math 427 word problems, 2021. URL https://arxiv.org/abs/2110.14168.
+[250] [Normal] 428 [31] Dan Hendrycks, Collin Burns, Saurav Kadavath, et al. Measuring mathematical problem 429 solving with the MATH dataset. In Thirty-fifth Conference on Neural Information Processing 430 Systems Datasets and Benchmarks Track (Round 2), 2021. URL https://openreview.net/ 431 forum?id=7Bywt2mQsCe.
+[251] [Normal] 432 [32] Hans Hüttel. On program synthesis and large language models. Commun. ACM, 68(1):33–35, 433 December 2024. ISSN 0001-0782. doi: 10.1145/3680410. URL https://doi.org/10.
+[252] [Normal] 1145/3680410.
+[253] [Normal] [33] Rowan Zellers, Ari Holtzman, Yonatan Bisk, Ali Farhadi, and Yejin Choi. HellaSwag: Can a
+[254] [Normal] machine really finish your sentence? In Anna Korhonen, David Traum, and Lluís Màrquez,
+[255] [Normal] editors, Proceedings of the 57th Annual Meeting of the Association for Computational Linguis438 tics, pages 4791–4800, Florence, Italy, July 2019. Association for Computational Linguistics. 439 doi: 10.18653/v1/P19-1472. URL https://aclanthology.org/P19-1472/.
+[256] [Normal] 440 [34] Yuzhen Huang, Yuzhuo Bai, Zhihao Zhu, et al. C-eval: A multi-level multi-discipline chinese 441 evaluation suite for foundation models. In Thirty-seventh Conference on Neural Information 442 Processing Systems Datasets and Benchmarks Track, 2023. URL https://openreview. 443 net/forum?id=fOrm2rGX2r.
+[257] [Normal] 444 [35] LeoLM Team. Arcchallenge_de: German translation of the ai2 reasoning challenge. https: 445 //huggingface.co/datasets/LeoLM/ArcChallenge_de, 2023.
+[258] [Normal] [36] Samuel Miserendino, Michele Wang, Tejal Patwardhan, and Johannes Heidecke. Swe-lancer:
+[259] [Normal] Can frontier llms earn $1 million from real-world freelance software engineering?, 2025. URL 448 https://arxiv.org/abs/2502.12115.
+[260] [Normal] [37] Francois Chollet, Mike Knoop, Gregory Kamradt, Bryan Landers, and Henry Pinkard. Arc-
+[261] [Normal] agi-2: A new challenge for frontier ai reasoning systems, 2026. URL https://arxiv.org/ 451 abs/2505.11831.
+[262] [Normal] 452 [38] Naman Jain, King Han, Alex Gu, et al. Livecodebench: Holistic and contamination free evalua453 tion of large language models for code. In The Thirteenth International Conference on Learning 454 Representations, 2025. URL https://openreview.net/forum?id=chfJJYC3iL.
+[263] [Normal] 455 [39] David Heineman, Valentin Hofmann, Ian Magnusson, et al. Signal and noise: A framework 456 for reducing uncertainty in language model evaluation. In The Thirty-ninth Annual Conference 457 on Neural Information Processing Systems, 2025. URL https://openreview.net/forum? 458 id=sAFottNlra.
+[264] [Normal] 459 [40] Anwoy Chatterjee, H S V N S Kowndinya Renduchintala, Sumit Bhatia, and Tanmoy 460 Chakraborty. POSIX: A prompt sensitivity index for large language models. In Yaser
+[265] [Normal] Al-Onaizan, Mohit Bansal, and Yun-Nung Chen, editors, Findings of the Association for Com-
+[266] [Normal] putational Linguistics: EMNLP 2024, pages 14550–14565, Miami, Florida, USA, November 463 2024. Association for Computational Linguistics. doi: 10.18653/v1/2024.findings-emnlp.852. 464 URL https://aclanthology.org/2024.findings-emnlp.852/.
+[267] [Normal] 465 [41] Lovish Madaan, Aaditya K. Singh, Rylan Schaeffer, et al. Quantifying variance in evaluation 466 benchmarks. arXiv preprint arXiv:2406.10229, 2024. doi: 10.48550/arXiv.2406.10229. URL 467 https://arxiv.org/abs/2406.10229.
+[268] [Normal] 468 [42] Rotem Dror, Gili Baumer, Segev Shlomov, and Roi Reichart. The hitchhiker’s guide to 469 testing statistical significance in natural language processing. In Iryna Gurevych and Yusuke 470 Miyao, editors, Proceedings of the 56th Annual Meeting of the Association for Computational 471 Linguistics (Volume 1: Long Papers), pages 1383–1392, Melbourne, Australia, July 2018.
+[269] [Normal] 472 Association for Computational Linguistics. doi: 10.18653/v1/P18-1128. URL https:// 473 aclanthology.org/P18-1128/.
+[270] [Normal] 474 [43] John P. Lalor, Hao Wu, and Hong Yu. Building an evaluation scale using item response theory. 475 In Jian Su, Kevin Duh, and Xavier Carreras, editors, Proceedings of the 2016 Conference
+[271] [Normal] 476 on Empirical Methods in Natural Language Processing, pages 648–657, Austin, Texas, 477 November 2016. Association for Computational Linguistics. doi: 10.18653/v1/D16-1062. 478 URL https://aclanthology.org/D16-1062/.
+[272] [Normal] 479 [44] Shahriar Golchin and Mihai Surdeanu. Time travel in LLMs: Tracing data contamination in 480 large language models. In The Twelfth International Conference on Learning Representations, 481 2024. URL https://openreview.net/forum?id=2Rwq6c3tvr.
+[273] [Normal] [45] Yihong Dong, Xue Jiang, Huanyu Liu, et al.	Generalization or memorization:	Data
+[274] [Normal] contamination and trustworthy evaluation for large language models. In Lun-Wei Ku, 484 Andre Martins, and Vivek Srikumar, editors, Findings of the Association for Computa485 tional Linguistics: ACL 2024, pages 12039–12050, Bangkok, Thailand, August 2024. As486 sociation for Computational Linguistics. doi: 10.18653/v1/2024.findings-acl.716. URL 487 https://aclanthology.org/2024.findings-acl.716/.
+[275] [Normal] [46] Bryan Etzine, Masoud Hashemi, Nishanth Madhusudhan, et al. Revitalizing saturated bench-
+[276] [Normal] marks: A weighted metric approach for differentiating large language model performance. In 490 Trista Cao, Anubrata Das, Tharindu Kumarage, et al., editors, Proceedings of the 5th Workshop
+[277] [Normal] 491 on Trustworthy NLP (TrustNLP 2025), pages 511–523, Albuquerque, New Mexico, May 2025. 492 Association for Computational Linguistics. ISBN 979-8-89176-233-6. doi: 10.18653/v1/2025. 493 trustnlp-main.33. URL https://aclanthology.org/2025.trustnlp-main.33/.
+[278] [Normal] 494 [47] Yucheng Li, Frank Guerin, and Chenghua Lin. Latesteval: addressing data contamina495 tion in language model evaluation through dynamic and time-sensitive test construction. 496 In Proceedings of the Thirty-Eighth AAAI Conference on Artificial Intelligence and Thirty497 Sixth Conference on Innovative Applications of Artificial Intelligence and Fourteenth Sym498 posium on Educational Advances in Artificial Intelligence, AAAI’24/IAAI’24/EAAI’24. 499 AAAI Press, 2024. ISBN 978-1-57735-887-9. doi: 10.1609/aaai.v38i17.29822. URL 500 https://doi.org/10.1609/aaai.v38i17.29822.
+[279] [Normal] 501 [48] Sikun Guo, Amir Hassan Shariatmadari, Guangzhi Xiong, et al. Ideabench: Benchmarking 502 large language models for research idea generation. In Proceedings of the 31st ACM SIGKDD 503 Conference on Knowledge Discovery and Data Mining V.2, KDD ’25, page 5888–5899, New 504 York, NY, USA, 2025. Association for Computing Machinery. ISBN 9798400714542. doi: 505 10.1145/3711896.3737419. URL https://doi.org/10.1145/3711896.3737419.
+[280] [Normal] 506 [49] Elliot Glazer, Ege Erdil, Tamay Besiroglu, et al. Frontiermath: A benchmark for evaluating 507 advanced mathematical reasoning in ai, 2025. URL https://arxiv.org/abs/2411.04872.
+[281] [Normal] [50] Shunyu Yao, Noah Shinn, Pedram Razavi, and Karthik R Narasimhan. {$\tau$}-bench: A
+[282] [Normal] benchmark for \underline{T}ool-\underline{A}gent-\underline{U}ser interaction in real-world 510 domains. In The Thirteenth International Conference on Learning Representations, 2025. 511 URL https://openreview.net/forum?id=roNSXZpUDN.
+[283] [Normal] 512 [51] Mark Chen, Jerry Tworek, Heewoo Jun, et al. Evaluating large language models trained on 513 code, 2021. URL https://arxiv.org/abs/2107.03374.
+[284] [Normal] 514 [52] Jacob Austin, Augustus Odena, Maxwell Nye, et al. Program synthesis with large language 515 models, 2021. URL https://arxiv.org/abs/2108.07732.
+[285] [Normal] 516 [53] Carlos E Jimenez, John Yang, Alexander Wettig, et al. SWE-bench: Can language models 517 resolve real-world github issues? In The Twelfth International Conference on Learning 518 Representations, 2024. URL https://openreview.net/forum?id=VTF8yNQM66.
+[286] [Normal] 519	[54] Rahul K. Arora, Jason Wei, Rebecca Soskin Hicks, et al. Healthbench: Evaluating large 520	language models towards improved human health, 2025. URL https://arxiv.org/abs/ 521	2505.08775.
+[287] [Normal] 522	[55] OpenAI. Graphwalks: A benchmark for evaluating graph-based reasoning in llms. https: 523	//huggingface.co/datasets/openai/graphwalks, 2024.
+[288] [Normal] 524	[56] Mike A. Merrill, Alexander G. Shaw, Nicholas Carlini, et al. Terminal-bench: Benchmarking 525	agents on hard, realistic tasks in command line interfaces, 2026. URL https://arxiv.org/ 526	abs/2601.11868.
+[289] [Normal] [57] OpenAI. Mrcr dataset. https://huggingface.co/datasets/openai/mrcr, 2024.
+[290] [Normal] [58] David Rein, Betty Li Hou, Asa Cooper Stickland, et al. GPQA: A graduate-level google529	proof q&a benchmark. In First Conference on Language Modeling, 2024. URL https: 530	//openreview.net/forum?id=Ti67584b98.
+[291] [Normal] 531	[59] Junlong Li, Wenshuo Zhao, Jian Zhao, et al. The tool decathlon: Benchmarking language 532	agents for diverse, realistic, and long-horizon task execution. 2025. URL https://arxiv. 533	org/abs/2510.25726.
+[292] [Normal] [60] Wei He, Yueqing Sun, Hongyan Hao, et al. Vitabench: Benchmarking LLM agents with
+[293] [Normal] versatile interactive tasks in real-world applications. In The Fourteenth International Con-
+[294] [Normal] ference on Learning Representations, 2026. URL https://openreview.net/forum?id=
+[295] [Normal] rtcX9qOBaz.
+[296] [Normal] [61] Maxwell-Jia. AIME 2024 dataset. https://huggingface.co/datasets/Maxwell-Jia/ 539	AIME_2024, 2024.
+[297] [Normal] 540	[62] Zhexu Wang, Yiping Liu, Yejie Wang, et al. Ojbench: A competition level code benchmark 541	for large language models, 2025. URL https://arxiv.org/abs/2506.16395.
+[298] [Normal] [63] François Chollet. On the measure of intelligence, 2019. URL https://arxiv.org/abs/
+[299] [Normal] 1911.01547.
+[300] [Normal] [64] Daoguang Zan, Zhirong Huang, Wei Liu, et al. Multi-SWE-bench: A multilingual benchmark 545	for issue resolving. In The Thirty-ninth Annual Conference on Neural Information Processing 546	Systems Datasets and Benchmarks Track, 2025. URL https://openreview.net/forum? 547	id=MhBZzkz4h9.
+[301] [Normal] 548 [65] Mislav Balunovic, Jasper Dekoninck, Ivo Petrov, Nikola Jovanovi´ c, and Martin Vechev.´ 549 Matharena: Evaluating llms on uncontaminated math competitions. Proceedings of the Neural 550 Information Processing Systems Track on Datasets and Benchmark, 2025.
+[302] [Normal] 551	[66] Minyang Tian, Luyu Gao, Dylan Zhang, et al.	Scicode: A research coding benchmark 552	curated by scientists. In The Thirty-eight Conference on Neural Information Processing 553	Systems Datasets and Benchmarks Track, 2024. URL https://openreview.net/forum? 554	id=ADLaALtdoG.
+[303] [Normal] 555	[67] Weiye Xu, Jiahao Wang, Weiyun Wang, et al.	Visulogic: A benchmark for evaluating 556	visual reasoning in multi-modal large language models. In The Fourteenth International 557	Conference on Learning Representations, 2026. URL https://openreview.net/forum? 558	id=mXuzDDVXxi.
+[304] [Normal] 559	[68] Peilin Zhou, Bruce Leon, Xiang Ying, et al. Browsecomp-zh: Benchmarking web browsing 560	ability of large language models in chinese. arXiv preprint arXiv:2504.19314, 2025.
+[305] [Normal] 561 [69] Zhun Wang, Tianneng Shi, Jingxuan He, et al. Cybergym: Evaluating AI agents’ real-world 562 cybersecurity capabilities at scale. In The Fourteenth International Conference on Learning 563 Representations, 2026. URL https://openreview.net/forum?id=2YvbLQEdYt.
+[306] [Normal] 564	[70] Axel Backlund and Lukas Petersson. Vending-bench: A benchmark for long-term coherence 565	of autonomous agents. arXiv preprint arXiv:2502.15840, 2025.
+[307] [Normal] 566 [71] Kaustubh Deshpande, Ved Sirdeshmukh, Johannes Baptist Mols, et al. MultiChallenge: A 567 realistic multi-turn conversation evaluation benchmark challenging to frontier LLMs. In
+[308] [Normal] 568 Wanxiang Che, Joyce Nabende, Ekaterina Shutova, and Mohammad Taher Pilehvar, editors, 569 Findings of the Association for Computational Linguistics: ACL 2025, pages 18632–18702,
+[309] [Normal] 570	Vienna, Austria, July 2025. Association for Computational Linguistics. ISBN 979-8-89176571	256-5. doi: 10.18653/v1/2025.findings-acl.958. URL https://aclanthology.org/2025. 572	findings-acl.958/.
+[310] [Normal] 573	[72] Paul	Gauthier.	Aider	polyglot	benchmark.	https://github.com/Aider-AI/ 574	polyglot-benchmark, 2024.
+[311] [Normal] 575 [73] Himanshu Gupta, Shreyas Verma, Ujjwala Anantheswaran, et al. Polymath: A challenging 576 multi-modal mathematical reasoning benchmark. arXiv preprint arXiv:2410.14702, 2024.
+[312] [Normal] 577 [74] Shanghaoran Quan, Jiaxi Yang, Bowen Yu, et al. Codeelo: Benchmarking competition-level 578 code generation of llms with human-comparable elo ratings. arXiv preprint arXiv:2501.01257,
+[313] [Normal] 2025.
+[314] [Normal] [75] ByteDance-Seed. BeyondAIME: Advancing math reasoning evaluation beyond high school 581 olympiads. https://huggingface.co/datasets/ByteDance-Seed/BeyondAIME, 2025. 582 Hugging Face repository.
+[315] [Normal] 583	[76] Chengke Zou, Xingang Guo, Rui Yang, et al. Dynamath: A dynamic visual benchmark for 584	evaluating mathematical reasoning robustness of vision language models. In The Thirteenth 585	International Conference on Learning Representations, 2025. URL https://openreview. 586	net/forum?id=VOAMTA8jKu.
+[316] [Normal] 587	[77] Xeron Du, Yifan Yao, Kaijing Ma, et al. SuperGPQA: Scaling LLM evaluation across 285 588	graduate disciplines. In The Thirty-ninth Annual Conference on Neural Information Processing 589	Systems Datasets and Benchmarks Track, 2025. URL https://openreview.net/forum? 590	id=6WgflzYQpf.
+[317] [Normal] 591 [78] Xiang Deng, Jeff Da, Edwin Pan, et al. Swe-bench pro: Can ai agents solve long-horizon 592 software engineering tasks?, 2025. URL https://arxiv.org/abs/2509.16941.
+[318] [Normal] 593 [79] Liang Chen, Weichu Xie, Yiyan Liang, et al. Babyvision: Visual reasoning beyond language, 594 2026. URL https://arxiv.org/abs/2601.06521.
+[319] [Normal] 595 [80] Chaithanya Bandi, Ben Hertzberg, Geobio Boo, et al. Mcp-atlas: A large-scale benchmark for 596 tool-use competency with real mcp servers, 2026. URL https://arxiv.org/abs/2602.
+[320] [Normal] 00933.
+[321] [Normal] [81] Thinh Pham, Nguyen Phan Nguyen, Pratibha Zunjare, et al. SealQA: Raising the bar for
+[322] [Normal] reasoning in search-augmented language models. In The Fourteenth International Confer-
+[323] [Normal] ence on Learning Representations, 2026. URL https://openreview.net/forum?id= 601	zWb7ueH16c.
+[324] [Normal] [82] Zirui Wang, Mengzhou Xia, Luxi He, et al. Charxiv: Charting gaps in realistic chart un-
+[325] [Normal] derstanding in multimodal llms. Advances in Neural Information Processing Systems, 37: 604	113569–113697, 2024.
+[326] [Normal] 605 [83] Zijian Wu, Xiangyan Liu, xinyuan zhang, et al. MCPMark: A benchmark for stress-testing 606 realistic and comprehensive MCP use. In The Fourteenth International Conference on Learning 607 Representations, 2026. URL https://openreview.net/forum?id=uobROwBsJm.
+[327] [Normal] [84] Yunzhuo Hao, Jiawei Gu, Huichen Will Wang, et al. Can MLLMs reason in multimodality?
+[328] [Normal] EMMA: An enhanced multimodal reasoning benchmark.	In Forty-second International 610	Conference on Machine Learning, 2025.	URL https://openreview.net/forum?id= 611	v26vwjxOEz.
+[329] [Normal] [85] Xiang Yue, Tianyu Zheng, Yuansheng Ni, et al. MMMU-pro: A more robust multi-discipline
+[330] [Normal] multimodal understanding benchmark. In Wanxiang Che, Joyce Nabende, Ekaterina Shutova,
+[331] [Normal] and Mohammad Taher Pilehvar, editors, Proceedings of the 63rd Annual Meeting of the
+[332] [Normal] Association for Computational Linguistics (Volume 1: Long Papers), pages 15134–15186,
+[333] [Normal] Vienna, Austria, July 2025. Association for Computational Linguistics. ISBN 979-8-89176617 251-0. doi: 10.18653/v1/2025.acl-long.736. URL https://aclanthology.org/2025. 618 acl-long.736/.
+[334] [Normal] 619 [86] Ke Wang, Junting Pan, Weikang Shi, et al. Measuring multimodal mathematical reasoning 620 with math-vision dataset. In The Thirty-eight Conference on Neural Information Processing 621 Systems Datasets and Benchmarks Track, 2024. URL https://openreview.net/forum? 622 id=QWTCcxMpPA.
+[335] [Normal] 623 [87] Tianbao Xie, Danyang Zhang, Jixuan Chen, et al. Osworld: Benchmarking multimodal 624 agents for open-ended tasks in real computer environments. Advances in Neural Information 625 Processing Systems, 37:52040–52094, 2024.
+[336] [Normal] [88] Yancheng He, Shilong Li, Jiaheng Liu, et al.	Chinese SimpleQA: A Chinese factuality
+[337] [Normal] evaluation for large language models. In Wanxiang Che, Joyce Nabende, Ekaterina Shutova,
+[338] [Normal] and Mohammad Taher Pilehvar, editors, Proceedings of the 63rd Annual Meeting of the
+[339] [Normal] Association for Computational Linguistics (Volume 1: Long Papers), pages 19182–19208,
+[340] [Normal] Vienna, Austria, July 2025. Association for Computational Linguistics. ISBN 979-8-89176631 251-0. doi: 10.18653/v1/2025.acl-long.941. URL https://aclanthology.org/2025. 632 acl-long.941/.
+[341] [Normal] 633 [89] LIANG HU, Jianpeng Jiao, Jiashuo Liu, et al. Finsearchcomp: Towards a realistic, expert634 level evaluation of financial search and reasoning. In The Fourteenth International Con-
+[342] [Normal] ference on Learning Representations, 2026. URL https://openreview.net/forum?id=
+[343] [Normal] 8AJbbbe2ni.
+[344] [Normal] [90] Jingzhe Ding, Shengda Long, Changxin Pu, et al. Nl2repo-bench: Towards long-horizon 638 repository generation evaluation of coding agents. arXiv preprint arXiv:2512.12730, 2025.
+[345] [Normal] 639 [91] Chaoqun He, Renjie Luo, Yuzhuo Bai, et al. OlympiadBench: A challenging benchmark for 640 promoting AGI with olympiad-level bilingual multimodal scientific problems. In Lun-Wei 641 Ku, Andre Martins, and Vivek Srikumar, editors, Proceedings of the 62nd Annual Meeting of
+[346] [Normal] 642 the Association for Computational Linguistics (Volume 1: Long Papers), pages 3828–3850, 643 Bangkok, Thailand, August 2024. Association for Computational Linguistics. doi: 10.18653/ 644 v1/2024.acl-long.211. URL https://aclanthology.org/2024.acl-long.211/.
+[347] [Normal] 645 [92] Xiang Yue, Yuansheng Ni, Kai Zhang, et al. Mmmu: A massive multi-discipline multimodal 646 understanding and reasoning benchmark for expert agi. In Proceedings of the IEEE/CVF 647 Conference on Computer Vision and Pattern Recognition (CVPR), pages 9556–9567, June
+[348] [Normal] 2024.
+[349] [Normal] [93] Zihan Zheng, Zerui Cheng, Zeyu Shen, et al. Livecodebench pro: How do olympiad medalists 650 judge LLMs in competitive programming? In The Thirty-ninth Annual Conference on 651 Neural Information Processing Systems Datasets and Benchmarks Track, 2025. URL https: 652 //openreview.net/forum?id=U5RIVFtat1.
+[350] [Normal] 653 [94] Kaixin Li, Meng Ziyang, Hongzhan Lin, et al. Screenspot-pro: GUI grounding for professional 654 high-resolution computer use. In Workshop on Reasoning and Planning for Large Language 655 Models, 2025. URL https://openreview.net/forum?id=XaKNDIAHas.
+[351] [Normal] 656	[95] Chris Alberti Connie Tao Jon Lipovetz Kate Olszewska Lukas Haas Michelle Liu Nate Keating 657	Adam Bloniarz Carl Saroufim Corey Fry Dror Marcus Doron Kukliansky Gaurav Singh Tomar 658	James Swirhun Jinwei Xing Lily Wang Michael Aaron Moran Ambar Rachana Fellinger Rui 659	Wang Ryan Sims Zizhao Zhang Sasha Goldshtein Yossi Matias Alon Jacovi, Andrew Wang 660	and Dipanjan Das. Facts leaderboard. https://kaggle.com/facts-leaderboard, 2024. 661	Google DeepMind, Google Research, Google Cloud, Kaggle.
+[352] [Normal] 662 [96] Gemini Robotics Team, Saminda Abeyruwan, Joshua Ainslie, et al. Gemini robotics: Bringing 663 ai into the physical world, 2025. URL https://arxiv.org/abs/2503.20020.
+[353] [Normal] 664 [97] Shunyu Yao, Howard Chen, Austin W. Hanjie, Runzhe Yang, and Karthik R Narasimhan. 665 COLLIE: Systematic construction of constrained text generation tasks. In The Twelfth Inter-
+[354] [Normal] 666 national Conference on Learning Representations, 2024. URL https://openreview.net/ 667 forum?id=kxgSlyirUZ.
+[355] [Normal] 668 [98] Shishir G Patil, Huanzhi Mao, Fanjia Yan, et al. The berkeley function calling leaderboard 669 (BFCL): From tool use to agentic evaluation of large language models. In Forty-second 670 International Conference on Machine Learning, 2025. URL https://openreview.net/ 671 forum?id=2GmDdhBdDk.
+[356] [Normal] 672 [99] Evan Frick Lisa Dunlap Banghua Zhu Joseph E. Gonzalez Ion Stoica Tianle Li*, Wei-Lin Chi673 ang*. From live data to high-quality benchmarks: The arena-hard pipeline, April 2024. URL 674 https://lmsys.org/blog/2024-04-19-arena-hard/.
+[357] [Normal] 675 [100] Antoine Bigeard, Langston Nashold, Rayan Krishnan, and Shirley Wu. Finance agent 676 benchmark: Benchmarking llms on real-world financial research tasks, 2025. URL https:
+[358] [Normal] //arxiv.org/abs/2508.00828.
+[359] [Normal] [101] Pan Lu, Hritik Bansal, Tony Xia, et al. Mathvista: Evaluating mathematical reasoning of 679 foundation models in visual contexts. In International Conference on Learning Representations
+[360] [Normal] (ICLR), 2024.
+[361] [Normal] [102] Thang Luong, Dawsen Hwang, Hoang H. Nguyen, et al. Towards robust mathematical 682 reasoning. In Proceedings of the 2025 Conference on Empirical Methods in Natural Language 683 Processing, 2025. URL https://aclanthology.org/2025.emnlp-main.1794/.
+[362] [Normal] [103] Bill Yuchen Lin, Ronan Le Bras, Kyle Richardson, et al. ZebraLogic: On the scaling limits
+[363] [Normal] of LLMs for logical reasoning. In Aarti Singh, Maryam Fazel, Daniel Hsu, et al., editors, 686 Proceedings of the 42nd International Conference on Machine Learning, volume 267 of 687 Proceedings of Machine Learning Research, pages 37889–37905. PMLR, 13–19 Jul 2025. 688 URL https://proceedings.mlr.press/v267/lin25i.html.
+[364] [Normal] 689 [104] Runqi Qiao, Qiuna Tan, Guanting Dong, et al. We-math: Does your large multimodal model 690	achieve human-like mathematical reasoning? In Wanxiang Che, Joyce Nabende, Ekaterina 691	Shutova, and Mohammad Taher Pilehvar, editors, Proceedings of the 63rd Annual Meeting of
+[365] [Normal] the Association for Computational Linguistics (Volume 1: Long Papers), pages 20023–20070,
+[366] [Normal] Vienna, Austria, July 2025. Association for Computational Linguistics. ISBN 979-8-89176694 251-0. doi: 10.18653/v1/2025.acl-long.983. URL https://aclanthology.org/2025. 695 acl-long.983/.
+[367] [Normal] 696 [105] Renrui Zhang, Dongzhi Jiang, Yichi Zhang, et al. Mathverse: Does your multi-modal llm truly 697 see thenbsp;diagrams innbsp;visual math problems? In Computer Vision – ECCV 2024: 18th
+[368] [Normal] 698 European Conference, Milan, Italy, September 29–October 4, 2024, Proceedings, Part VIII, 699 page 169–186, Berlin, Heidelberg, 2024. Springer-Verlag. ISBN 978-3-031-73241-6. doi: 10.
+[369] [Normal] 1007/978-3-031-73242-3_10. URL https://doi.org/10.1007/978-3-031-73242-3_
+[370] [Normal] 10.
+[371] [Normal] [106] Shishir G Patil, Huanzhi Mao, Fanjia Yan, et al. The berkeley function calling leaderboard
+[372] [Normal] (BFCL): From tool use to agentic evaluation of large language models.	In Aarti Singh,
+[373] [Normal] Maryam Fazel, Daniel Hsu, et al., editors, Proceedings of the 42nd International Conference 705 on Machine Learning, volume 267 of Proceedings of Machine Learning Research, pages 706 48371–48392. PMLR, 13–19 Jul 2025. URL https://proceedings.mlr.press/v267/ 707 patil25a.html.
+[374] [Normal] [107] Xianfu Cheng, Wei Zhang, Shiwei Zhang, et al. Simplevqa: Multimodal factuality evalua-
+[375] [Normal] tion for multimodal large language models. In Proceedings of the IEEE/CVF International 710	Conference on Computer Vision, pages 4637–4646, 2025.
+[376] [Normal] 711 [108] Yijia Xiao, Edward Sun, Tianyu Liu, and Wei Wang. Logicvista: Multimodal llm logical 712 reasoning benchmark in visual contexts. arXiv preprint arXiv:2407.04973, 2024.
+[377] [Normal] 713 [109] Lin Chen, Jinsong Li, Xiaoyi Dong, et al. Are we on the right way for evaluating large 714 vision-language models? In Proceedings of the 38th International Conference on Neural 715 Information Processing Systems, NIPS ’24, Red Hook, NY, USA, 2024. Curran Associates Inc. 716 ISBN 9798331314385.
+[378] [Normal] 717 [110] Yushi Bai, Shangqing Tu, Jiajie Zhang, et al. LongBench v2: Towards deeper understanding 718 and reasoning on realistic long-context multitasks. In Wanxiang Che, Joyce Nabende, Ekaterina 719 Shutova, and Mohammad Taher Pilehvar, editors, Proceedings of the 63rd Annual Meeting of
+[379] [Normal] the Association for Computational Linguistics (Volume 1: Long Papers), pages 3639–3664,
+[380] [Normal] Vienna, Austria, July 2025. Association for Computational Linguistics. ISBN 979-8-89176722 251-0. doi: 10.18653/v1/2025.acl-long.183. URL https://aclanthology.org/2025. 723 acl-long.183/.
+[381] [Normal] 724 [111] Federico Cassano, John Gouwar, Daniel Nguyen, et al. Multipl-e: A scalable and polyglot ap725 proach to benchmarking neural code generation. IEEE Transactions on Software Engineering, 726 49(7):3675–3691, 2023. doi: 10.1109/TSE.2023.3267446.
+[382] [Normal] [112] Valentina Pyatkin, Saumya Malik, Victoria Graf, et al. Generalizing verifiable instruction
+[383] [Normal] following. In The Thirty-ninth Annual Conference on Neural Information Processing Sys-
+[384] [Normal] tems Datasets and Benchmarks Track, 2026. URL https://openreview.net/forum?id= 730 yfYgwjj5F8.
+[385] [Normal] 731 [113] Tianrui Guan, Fuxiao Liu, Xiyang Wu, et al. Hallusionbench: An advanced diagnostic suite 732 for entangled language hallucination and visual illusion in large vision-language models. 733 In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition 734 (CVPR), pages 14375–14385, June 2024.
+[386] [Normal] 735 [114] Ryan Wong, Jiawei Wang, Junjie zhao, et al. Widesearch: Benchmarking agentic broad 736 info-seeking. In The Fourteenth International Conference on Learning Representations, 2026. 737 URL https://openreview.net/forum?id=Q7YUY7zGkZ.
+[387] [Normal] 738 [115] Yilun Zhao, Haowei Zhang, Lujing Xie, et al. Mmvu: Measuring expert-level multi-discipline 739	video understanding. In Proceedings of the Computer Vision and Pattern Recognition Confer740	ence, pages 8475–8489, 2025.
+[388] [Normal] 741 [116] Piotr Padlewski, Max Bain, Matthew Henderson, et al. Vibe-eval: A hard evaluation suite for 742 measuring progress of multimodal language models, 2024. URL https://arxiv.org/abs/
+[389] [Normal] 2405.02287.
+[390] [Normal] [117] Xingyu Fu, Yushi Hu, Bangzheng Li, et al. Blink: Multimodal large language models can see
+[391] [Normal] butnbsp;not perceive. In Computer Vision – ECCV 2024: 18th European Conference, Milan, 746 Italy, September 29–October 4, 2024, Proceedings, Part XXIII, page 148–166, Berlin, Heidel747 berg, 2024. Springer-Verlag. ISBN 978-3-031-73336-9. doi: 10.1007/978-3-031-73337-6_9. 748 URL https://doi.org/10.1007/978-3-031-73337-6_9.
+[392] [Normal] 749 [118] Nikita Gupta, Riju Chatterjee, Lukas Haas, et al. Deepsearchqa: Bridging the comprehensive750	ness gap for deep research agents, 2026. URL https://arxiv.org/abs/2601.20975.
+[393] [Normal] 751 [119] Enshen Zhou, Jingkun An, Cheng Chi, et al. Roborefer: Towards spatial referring with 752 reasoning in vision-language models for robotics. In The Thirty-ninth Annual Conference on 753 Neural Information Processing Systems, 2026. URL https://openreview.net/forum? 754 id=OGxalNUHbJ.
+[394] [Normal] [120] Artificial Analysis Team. Artificial analysis long context reasoning benchmark(lcr), 2025.
+[395] [Normal] [121] Samuel J Paech. Eq-bench creative writing benchmark v3. https://github.com/ 757 EQ-bench/creative-writing-bench, 2025.
+[396] [Normal] [122] Wanjun Zhong, Ruixiang Cui, Yiduo Guo, et al. AGIEval: A human-centric benchmark for
+[397] [Normal] evaluating foundation models. In Kevin Duh, Helena Gomez, and Steven Bethard, editors,
+[398] [Normal] Findings of the Association for Computational Linguistics: NAACL 2024, pages 2299–2314, 761 Mexico City, Mexico, June 2024. Association for Computational Linguistics. doi: 10.18653/ 762 v1/2024.findings-naacl.149. URL https://aclanthology.org/2024.findings-naacl.
+[399] [Normal] 149/.
+[400] [Normal] [123] Jeffrey Zhou, Tianjian Lu, Swaroop Mishra, et al. Instruction-following evaluation for large 765	language models, 2023. URL https://arxiv.org/abs/2311.07911.
+[401] [Normal] [124] Dheeru Dua, Yizhong Wang, Pradeep Dasigi, et al.	DROP: A reading comprehension
+[402] [Normal] benchmark requiring discrete reasoning over paragraphs. In Jill Burstein, Christy Doran,
+[403] [Normal] and Thamar Solorio, editors, Proceedings of the 2019 Conference of the North Ameri-
+[404] [Normal] can Chapter of the Association for Computational Linguistics: Human Language Tech770 nologies, Volume 1 (Long and Short Papers), pages 2368–2378, Minneapolis, Minnesota, 771 June 2019. Association for Computational Linguistics. doi: 10.18653/v1/N19-1246. URL 772 https://aclanthology.org/N19-1246/.
+[405] [Normal] 773 [125] Yun He, Di Jin, Chaoqi Wang, et al. Multi-if: Benchmarking llms on multi-turn and multilin774	gual instructions following, 2024. URL https://arxiv.org/abs/2410.15553.
+[406] [Normal] [126] Yoonho	Lee.	completions_qwen3_4blrablation_filtered_0503_lr1e6_qwen3-
+[407] [Normal] 4b_cnmo2024.	https://huggingface.co/datasets/yoonholee/completions_ 777	qwen3_4blrablation_filtered_0503_lr1e6_Qwen3-4B_CNMO2024, 2025.
+[408] [Normal] [127] Freda Shi, Mirac Suzgun, Markus Freitag, et al. Language models are multilingual chain-of-
+[409] [Normal] thought reasoners. In The Eleventh International Conference on Learning Representations, 780 2023. URL https://openreview.net/forum?id=fR3wGCk-IXp.
+[410] [Normal] 781 [128] Bowen Ye, Rang Li, Qibin Yang, et al. Claw-eval: Toward trustworthy evaluation of au782 tonomous agents, 2026. URL https://arxiv.org/abs/2604.06132.
+[411] [Normal] 783 [129] Grégoire Mialon, Clémentine Fourrier, Thomas Wolf, Yann LeCun, and Thomas Scialom. 784 Gaia: a benchmark for general ai assistants. In The Twelfth International Conference on 785 Learning Representations, 2023.
+[412] [Normal] [130] Liang Xu, Hai Hu, Xuanwei Zhang, et al. CLUE: A Chinese language understanding evaluation
+[413] [Normal] benchmark. In Proceedings of the 28th International Conference on Computational Linguistics,
+[414] [Normal] pages 4762–4772, Barcelona, Spain (Online), December 2020. International Committee 789 on Computational Linguistics. doi: 10.18653/v1/2020.coling-main.419. URL https:// 790 aclanthology.org/2020.coling-main.419.
+[415] [Normal] 791 [131] Colin White, Samuel Dooley, Manley Roberts, et al. Livebench: A challenging, contamination792 free LLM benchmark. In The Thirteenth International Conference on Learning Representa793 tions, 2025.
+[416] [Normal] 794 [132] Yuning Wu, Jiahao Mei, Ming Yan, et al. Writingbench: A comprehensive benchmark for 795 generative writing. In The Thirty-ninth Annual Conference on Neural Information Processing 796 Systems Datasets and Benchmarks Track, 2025. URL https://openreview.net/forum? 797 id=Pkskg9drDQ.
+[417] [Normal] 798 [133] Kairui Hu, Penghao Wu, Fanyi Pu, et al. Video-mmmu: Evaluating knowledge acquisition from 799 multi-discipline professional videos, 2025. URL https://arxiv.org/abs/2501.13826.
+[418] [Normal] 800 [134] Advaith Sridhar, Rohith Gandhi Ganesan, Pratyush Kumar, and Mitesh Khapra. Include: A 801 large scale dataset for indian sign language recognition. In Proceedings of the 28th ACM
+[419] [Normal] 802 International Conference on Multimedia, MM ’20, page 1366–1375, New York, NY, USA, 803 2020. Association for Computing Machinery. ISBN 9781450379885. doi: 10.1145/3394171. 804 3413528. URL https://doi.org/10.1145/3394171.3413528.
+[420] [Normal] 805 [135] Yanzhao Qin, Tao Zhang, Tao Zhang, et al. Sysbench: Can LLMs follow system message? In 806 The Thirteenth International Conference on Learning Representations, 2025. URL https: 807 //openreview.net/forum?id=KZWaxtzIRx.
+[421] [Normal] 808 [136] Wenyi Hong, Yean Cheng, Zhuoyi Yang, et al. Motionbench: Benchmarking and improving 809	fine-grained video motion understanding for vision language models. In Proceedings of the 810	Computer Vision and Pattern Recognition Conference, pages 8450–8460, 2025.
+[422] [Normal] [137] Weihao Xuan, Rui Yang, Heli Qi, et al. MMLU-ProX: A multilingual benchmark for advanced
+[423] [Normal] large language model evaluation. In Christos Christodoulopoulos, Tanmoy Chakraborty, 813 Carolyn Rose, and Violet Peng, editors, Proceedings of the 2025 Conference on Empirical
+[424] [Normal] 814 Methods in Natural Language Processing, pages 1513–1532, Suzhou, China, November 2025. 815 Association for Computational Linguistics. ISBN 979-8-89176-332-6. doi: 10.18653/v1/2025. 816 emnlp-main.79. URL https://aclanthology.org/2025.emnlp-main.79/.
+[425] [Normal] 817 [138] visheratin. RealWorldQA dataset. https://huggingface.co/datasets/visheratin/ 818 realworldqa, 2024. Originally released by xAI at https://x.ai/news/grok-1.5v.
+[426] [Normal] 819 [139] Satyapriya Krishna, Kalpesh Krishna, Anhad Mohananey, et al. Fact, fetch, and reason: A 820 unified evaluation of retrieval-augmented generation. In Luis Chiruzzo, Alan Ritter, and 821 Lu Wang, editors, Proceedings of the 2025 Conference of the Nations of the Americas Chapter 822 of the Association for Computational Linguistics: Human Language Technologies (Volume 823 1: Long Papers), pages 4745–4759, Albuquerque, New Mexico, April 2025. Association for 824 Computational Linguistics. ISBN 979-8-89176-189-6. doi: 10.18653/v1/2025.naacl-long.243. 825 URL https://aclanthology.org/2025.naacl-long.243/.
+[427] [Normal] 826 [140] Chaoyou Fu, Yuhan Dai, Yongdong Luo, et al. Video-mme: The first-ever comprehensive 827 evaluation benchmark of multi-modal llms in video analysis. In Proceedings of the IEEE/CVF 828 conference on computer vision and pattern recognition, pages 24108–24118, 2025.
+[428] [Normal] [141] Yuan Liu, Haodong Duan, Yuanhan Zhang, et al. Mmbench: Is your multi-modal model
+[429] [Normal] annbsp;all-around player? In Computer Vision – ECCV 2024: 18th European Conference, Mi831 lan, Italy, September 29–October 4, 2024, Proceedings, Part VI, page 216–233, Berlin, Heidel832 berg, 2024. Springer-Verlag. ISBN 978-3-031-72657-6. doi: 10.1007/978-3-031-72658-3_13. 833 URL https://doi.org/10.1007/978-3-031-72658-3_13.
+[430] [Normal] 834 [142] Sergey Kastryulin, Jamil Zakirov, Denis Prokopenko, and Dmitry V. Dylov. Pytorch image 835	quality: Metrics for image quality assessment, 2022. URL https://arxiv.org/abs/2208.
+[431] [Normal] 14818.
+[432] [Normal] [143] Weihan Wang, Zehai He, Wenyi Hong, et al. Lvbench: An extreme long video understanding 838	benchmark. In Proceedings of the IEEE/CVF International Conference on Computer Vision 839	(ICCV), pages 22958–22967, October 2025.
+[433] [Normal] 840 [144] Haoning Wu, Dongxu Li, Bei Chen, and Junnan Li. Longvideobench: A benchmark for 841 long-context interleaved video-language understanding. Advances in Neural Information 842 Processing Systems, 37:28828–28857, 2024.
+[434] [Normal] [145] Aniruddha Kembhavi, Mike Salvato, Eric Kolve, et al. A diagram is worth a dozen images,
+[435] [Normal] 2016.
+[436] [Normal] [146] Chen Chen, Xinlong Hao, Weiwen Liu, et al. ACEBench: A comprehensive evaluation of 846 LLM tool usage. In Christos Christodoulopoulos, Tanmoy Chakraborty, Carolyn Rose, and 847 Violet Peng, editors, Findings of the Association for Computational Linguistics: EMNLP 848 2025, pages 12970–12998, Suzhou, China, November 2025. Association for Computational 849 Linguistics. ISBN 979-8-89176-335-7. doi: 10.18653/v1/2025.findings-emnlp.697. URL 850 https://aclanthology.org/2025.findings-emnlp.697/.
+[437] [Normal] 851 [147] Keisuke Sakaguchi, Ronan Le Bras, Chandra Bhagavatula, and Yejin Choi. Winogrande: an 852 adversarial winograd schema challenge at scale. Commun. ACM, 64(9):99–106, August 2021. 853 ISSN 0001-0782. doi: 10.1145/3474381. URL https://doi.org/10.1145/3474381.
+[438] [Normal] [148] Ling Fu, Zhebin Kuang, Jiajun Song, et al. OCRBench v2: An improved benchmark for
+[439] [Normal] evaluating large multimodal models on visual text localization and reasoning. In The Thirty856 ninth Annual Conference on Neural Information Processing Systems Datasets and Benchmarks 857 Track, 2026. URL https://openreview.net/forum?id=Vb6i3Dp24N.
+[440] [Normal] 858 [149] Hunter Lightman, Vineet Kosaraju, Yuri Burda, et al. Let’s verify step by step. In The Twelfth 859 International Conference on Learning Representations, 2024. URL https://openreview. 860 net/forum?id=v8L0pN6EOi.
+[441] [Normal] 861 [150] Alex Gu, Baptiste Roziere, Hugh James Leather, et al. CRUXEval: A benchmark for code 862 reasoning, understanding and execution. In Ruslan Salakhutdinov, Zico Kolter, Katherine
+[442] [Normal] 863 Heller, et al., editors, Proceedings of the 41st International Conference on Machine Learning, 864 volume 235 of Proceedings of Machine Learning Research, pages 16568–16621. PMLR, 865 21–27 Jul 2024. URL https://proceedings.mlr.press/v235/gu24c.html.
+[443] [Normal] 866 [151] Aryo Pradipta Gema, Joshua Ong Jun Leang, Giwon Hong, et al. Are we done with MMLU? 867 In Luis Chiruzzo, Alan Ritter, and Lu Wang, editors, Proceedings of the 2025 Conference 868 of the Nations of the Americas Chapter of the Association for Computational Linguistics: 869 Human Language Technologies (Volume 1: Long Papers), pages 5069–5096, Albuquerque,
+[444] [Normal] 870 New Mexico, April 2025. Association for Computational Linguistics. ISBN 979-8-89176871 189-6. doi: 10.18653/v1/2025.naacl-long.262. URL https://aclanthology.org/2025. 872 naacl-long.262/.
+[445] [Normal] 873 [152] Mirac Suzgun, Nathan Scales, Nathanael Schärli, et al. Challenging BIG-bench tasks and 874 whether chain-of-thought can solve them. In Anna Rogers, Jordan Boyd-Graber, and Naoaki
+[446] [Normal] Okazaki, editors, Findings of the Association for Computational Linguistics: ACL 2023,
+[447] [Normal] pages 13003–13051, Toronto, Canada, July 2023. Association for Computational Linguis877 tics. doi: 10.18653/v1/2023.findings-acl.824. URL https://aclanthology.org/2023. 878 findings-acl.824/.
+[448] [Normal] 879 [153] Tyler A. Chang, Catherine Arnett, Abdelrahman Eldesokey, et al. Global piqa: Evaluating 880	physical commonsense reasoning across 100+ languages and cultures, 2025. URL https:
+[449] [Normal] //arxiv.org/abs/2510.24081.
+[450] [Normal] [154] Haonan Li, Yixuan Zhang, Fajri Koto, et al.	CMMLU: Measuring massive multitask
+[451] [Normal] language understanding in Chinese.	In Lun-Wei Ku, Andre Martins, and Vivek Sriku-
+[452] [Normal] mar, editors, Findings of the Association for Computational Linguistics: ACL 2024, pages
+[453] [Normal] 11260–11285, Bangkok, Thailand, August 2024. Association for Computational Linguis886 tics. doi: 10.18653/v1/2024.findings-acl.671. URL https://aclanthology.org/2024. 887 findings-acl.671/.
+[454] [Normal] [155] Pooyan Rahmanzadehgervi, Logan Bolton, Mohammad Reza Taesiri, and Anh Totti Nguyen.
+[455] [Normal] Vision language models are blind. In Proceedings of the Asian Conference on Computer Vision, 890 pages 18–34, 2024.
+[456] [Normal] [156] Shivalika Singh, Angelika Romanou, Clémentine Fourrier, et al. Global MMLU: Understand-
+[457] [Normal] ing and addressing cultural and linguistic biases in multilingual evaluation. In Wanxiang 893 Che, Joyce Nabende, Ekaterina Shutova, and Mohammad Taher Pilehvar, editors, Proceedings 894 of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: 895 Long Papers), pages 18761–18799, Vienna, Austria, July 2025. Association for Computa896 tional Linguistics. ISBN 979-8-89176-251-0. doi: 10.18653/v1/2025.acl-long.919. URL 897 https://aclanthology.org/2025.acl-long.919/.
+[458] [Normal] 898 [157] Linke Ouyang, Yuan Qu, Hongbin Zhou, et al. Omnidocbench: Benchmarking diverse pdf 899 document parsing with comprehensive annotations. In Proceedings of the Computer Vision 900 and Pattern Recognition Conference, pages 24838–24848, 2025.
+[459] [Normal] [158] Hui Zeng. Measuring massive multitask chinese understanding, 2023. URL https://arxiv.
+[460] [Normal] org/abs/2304.12986.
+[461] [Normal] [159] Ahmed Masry, Do Xuan Long, Jia Qing Tan, Shafiq Joty, and Enamul Hoque. ChartQA:
+[462] [Normal] A benchmark for question answering about charts with visual and logical reasoning. In
+[463] [Normal] Smaranda Muresan, Preslav Nakov, and Aline Villavicencio, editors, Findings of the Associa906 tion for Computational Linguistics: ACL 2022, pages 2263–2279, Dublin, Ireland, May 2022.
+[464] [Normal] 907 Association for Computational Linguistics. doi: 10.18653/v1/2022.findings-acl.177. URL 908 https://aclanthology.org/2022.findings-acl.177/.
+[465] [Normal] 909 [160] Roni Paiss, Ariel Ephrat, Omer Tov, et al. Teaching clip to count to ten. In Proceedings of the 910	IEEE/CVF international conference on computer vision, pages 3170–3180, 2023.
+[466] [Normal] 911 [161] Tianwen Wei, Jian Luan, Wei Liu, Shuang Dong, and Bin Wang. Cmath: Can your language 912	model pass chinese elementary school math test?, 2023. URL https://arxiv.org/abs/ 913	2306.16636.
+[467] [Normal] 914 [162] Karttikeya Mangalam, Raiymbek Akshkulakov, and Jitendra Malik. Egoschema: a diagnostic 915 benchmark for very long-form video language understanding. In Proceedings of the 37th 916 International Conference on Neural Information Processing Systems, NIPS ’23, Red Hook, 917 NY, USA, 2023. Curran Associates Inc.
+[468] [Normal] 918 [163] Minesh Mathew, Dimosthenis Karatzas, and CV Jawahar. Docvqa: A dataset for vqa on 919 document images. In Proceedings of the IEEE/CVF winter conference on applications of 920 computer vision, pages 2200–2209, 2021.
+[469] [Heading 1] 921 A	Limitations
+[470] [Normal] BHI is, to the best of our knowledge, the first benchmark-level auditing framework that systematically
+[471] [Normal] quantifies benchmark health across discrimination, anti-saturation, and ecosystem impact, rather than 924 an absolute measure of model capability or benchmark quality. Its conclusions should therefore be 925 interpreted as relative diagnostic signals within the collected evaluation ecosystem. The framework is 926 most informative when a benchmark has sufficient public reporting coverage and when the reported 927 scores are comparable after normalization. Benchmarks with limited adoption, highly specialized 928 evaluation protocols, or rapidly changing versions may receive less stable estimates, even though the 929 LOBO calibration in Section 3.2 and the coverage analysis in Appendix I are designed to reduce this 930 effect.
+[472] [Normal] 931 A second limitation comes from the heterogeneity of public technical reports. Although the data 932 pipeline in Section 3 and Appendix E applies systematic filtering, score normalization, and benchmark
+[473] [Normal] alignment, model reports do not always disclose evaluation prompts, decoding settings, test splits,
+[474] [Normal] contamination controls, or metric variants with the same level of detail. As a result, BHI should not 935 be viewed as replacing benchmark-specific replication studies. Instead, it provides a reproducible 936 macro-level audit that can help identify where such more detailed studies are most needed.
+[475] [Normal] 937 The anti-saturation component also relies on several simplifying assumptions. In Section 3.3, we 938 model short-term score evolution using a linear trend and a fixed projection window. This choice
+[476] [Normal] 939 is intentionally conservative and is supported by the sensitivity analyses in Appendix H, but real 940 benchmark lifecycles may be nonlinear: a benchmark can experience abrupt saturation after a new 941 training recipe, tool-use capability, or data exposure event becomes widespread. Therefore, the 942 dynamic component should be interpreted as a near-term warning signal rather than a long-horizon 943 forecast.
+[477] [Normal] 944 The impact score in Section 3.4 measures capability-weighted adoption among models with valid 945 public reports. This design avoids relying on raw popularity signals such as citations or repository
+[478] [Normal] statistics, but it also means that BHI captures reported evaluation practice rather than all forms of
+[479] [Normal] scientific influence. For example, a benchmark may shape research discussions, diagnostic analysis,
+[480] [Normal] or internal evaluation pipelines without appearing frequently in public model reports. Conversely, a 949 widely reported benchmark may retain high adoption even after its technical diagnostic value has 950 begun to decline. The three-axis decomposition is intended to expose this tension, but it cannot fully 951 observe private or undocumented evaluation use.
+[481] [Normal] 952 Our external validation is also necessarily limited. The case study in Table 3 shows that BHI separates 953 independently identified saturated benchmarks from active frontier benchmarks, providing evidence 954 of directional consistency with current evaluation practice. However, this should be understood as 955 face validity rather than criterion validity against an independently collected ground-truth health score.
+[482] [Normal] 956 Building such a ground truth would require structured expert elicitation or longitudinal replication 957 studies, which we leave for future work.
+[483] [Normal] Finally, BHI is a lightweight post-hoc auditing procedure, but its scalability still depends on the
+[484] [Normal] availability and maintenance of structured benchmark metadata. The computational cost of the 960 index itself is modest compared with model evaluation, since it operates on reported scores rather 961 than rerunning benchmarks. The main cost lies in data curation, version alignment, and continuous 962 updates as new models and benchmarks appear. Future work could integrate BHI with existing agent 963 frameworks to support automated benchmark report parsing, metadata alignment, and periodic index 964 updates as new models and benchmarks emerge.
+[485] [Heading 1] 965 B	Expanded Related Work
+[486] [Normal] B.1	Shifting Evaluation Paradigms
+[487] [Normal] The meteoric rise of LLMs has catalyzed a paradigm shift in evaluation, moving from single-task 968 leaderboards toward comprehensive benchmark suites that encompass knowledge, reasoning, and 969 safety [1, 4]. However, conventional evaluation frameworks predominantly adopt a model-centric 970 perspective, treating benchmarks as static and immutable measurement tools. As model capabilities 971 continue to leapfrog, public benchmarks are increasingly susceptible to score inflation and leaderboard 972 distortion, which diminish their capacity to characterize genuine differences in model performance [8]. 973 Consequently, the research focus in the community is gradually pivoting from simple performance
+[488] [Normal] 974 comparisons between models to in-depth investigations into the validity, robustness, and lifecycles 975 of the benchmarks themselves [39, 15, 19]. Despite this shift, existing studies typically propose 976 diagnostic metrics centered on local dimensions—such as uncertainty, measurement quality, or 977 cross-benchmark consistency—and lack a unified, scalable framework for the longitudinal monitoring 978 of benchmark efficacy as it co-evolves with model advancements.
+[489] [Normal] B.2	Reliability and Measurement Theory
+[490] [Normal] The reliability of evaluation outcomes faces severe challenges from prompt sensitivity, annotation 981 noise, and stochasticity in sampling [40, 41]. To mitigate these issues, researchers have integrated
+[491] [Normal] statistical tools such as bootstrap estimation, confidence intervals, and significance testing to distin-
+[492] [Normal] guish true performance gains from measurement noise, establishing more robust reporting norms 984 [42]. From the perspectives of psychometrics and Item Response Theory (IRT), the core utility 985 of a benchmark lies in its discriminative power—the measurement resolution jointly determined
+[493] [Normal] 986 by item difficulty and discrimination parameters [43]. In the context of LLM evaluation, however, 987 high-performing models often trigger upper-tail compression and a lack of leaderboard separability, 988 rendering traditional metrics ineffective at identifying fine-grained capability nuances.
+[494] [Normal] B.3	Benchmark Degradation and Dynamics
+[495] [Normal] The efficacy of evaluation benchmarks exhibits a discernible degradation trend over time, primar-
+[496] [Normal] ily driven by saturation effects and data contamination [17, 44]. When models approach ceiling 992 performance on existing datasets, or when evaluation data is implicitly leaked into pre-training 993 corpora, the discriminative capacity of a benchmark shrinks rapidly. This blurs the boundary between
+[497] [Normal] generalization and memorization, prompting the development of contamination detection and veri-
+[498] [Normal] fiable evaluation corrections [16, 45]. To address the loss of resolution caused by saturation, some 996 work attempts to reactivate the discriminative power of existing benchmarks through weighted or 997 augmented metrics, thus improving the separability among SOTA models [46]. Although dynamic
+[499] [Normal] evaluation—which refreshes the task pools or introduces temporal windows—can alleviate contami-
+[500] [Normal] nation risks, it introduces a trade-off between maintaining longitudinal comparability and controlling 1000 evaluation costs [6, 47]. Therefore, a significant research gap remains in the construction of a unified 1001 data-driven framework for the long-term tracking of benchmark health [39, 17, 48].
+[501] [Heading 1] 1002 C	Sensitivity Analysis of Discrimination Threshold
+[502] [Normal] 1003 The Effective Differentiation Ratio (EDR) in Section 3.1.1 depends on a noise-filtering threshold δ, 1004 which determines whether a pairwise score gap is treated as an informative distinction between two 1005 models. In the main experiments, we set δ = 2.0% of the observed score range for each benchmark. 1006 This appendix evaluates whether the resulting BHI ranking is sensitive to this choice.
+[503] [Normal] 1007 We vary δ from 0.5% to 5.0% and recompute the complete BHI pipeline under each setting, including 1008 the normalized discrimination score, CRITIC-based final weighting, and global benchmark ranking.
+[504] [Normal] 1009 The resulting ranking is compared against the default setting δ = 2.0% using Spearman rank 1010 correlation and top-10 overlap.
+[505] [Normal] Table 4: Sensitivity of BHI rankings to the EDR threshold δ. Spearman correlation is computed against the default setting δ = 2.0%.
+[506] [Normal] 1011 As shown in Table 4, the BHI ranking remains highly stable across the tested threshold range. Even 1012 under the most conservative threshold setting of δ = 5.0%, the Spearman correlation with the default
+[507] [Normal] ranking remains 0.9646, and the top-10 overlap remains 9 out of 10. The strongest stability is
+[508] [Normal] observed near the default region between 1.5% and 2.5%, where the Spearman correlation exceeds 1015 0.995.
+[509] [Normal] Threshold Sensitivity Analysis: Ranking Stability vs. Information Importance
+[511] [Normal] Figure 7: Sensitivity of BHI ranking stability and the CRITIC-assigned discrimination weight under different EDR thresholds.
+[512] [Normal] 1016 Figure 7 further shows that the CRITIC-assigned weight of SDisc varies smoothly with δ. Larger 1017 thresholds make EDR stricter and increase the relative information contribution of the discrimination 1018 axis, but this does not materially alter the final ranking. These results indicate that the proposed 1019 discrimination component captures a stable ranking signal rather than an artifact of a specific threshold 1020 choice.
+[513] [Heading 1] 1021 D	SDM Weighting and Normalization
+[514] [Normal] 1022 This subsection provides the detailed mathematical derivation for SDM and the normalization process 1023 utilized in computing SDisc(b).
+[515] [Normal] D.1	Analysis of Metric Characteristics and Scale Disparities
+[516] [Normal] When constructing SDisc(b), the two constituent metrics, EDR(b) and RCV (b), exhibit significant 1026 differences in their mathematical properties and distributional behaviors:
+[517] [Normal] 1. Incongruent Scales and Units: RCV (b) is derived from the percentile spread of model
+[518] [Normal] score distributions and typically manifests as a continuous numerical value. In contrast, 1029 EDR(b) represents the proportion of model pairs exceeding a specific noise-filtering thresh-
+[519] [Normal] old.
+[520] [Normal] 2. Variance Suppression Induced by Discretization: The values of EDR(b) are highly 1032 sensitive to the number of participating models N. For instance, if a benchmark has only
+[521] [Normal] N = 3 models, the total number of pairwise combinations is. Consequently,
+[522] [Normal] EDR(b) can only take values from the discrete set {0,1/3,2/3,1}. Such high discreteness 1035	in sparse datasets can lead to a "pseudo-standard deviation" that is statistically lower than 1036	the metric’s true discriminative potential.
+[523] [Normal] 1037 3. Sparse Coverage Bias: Given that the study analyzes a meta-dataset of 158 benchmarks 1038 with varying model coverage, using raw standard deviations for weighting would allow 1039 metrics with naturally wider or more continuous distributions, such as RCV (b), to dominate
+[524] [Normal] the final weight, thereby masking the fine-grained micro-resolution signals provided by
+[525] [Normal] EDR(b).
+[527] [Normal] Figure 8: Chronological distribution of the 91 mainstream large language models released throughout 2025.
+[528] [Normal] D.2	Scale Alignment via Min-Max Normalization
+[529] [Normal] To mitigate the aforementioned biases, we first perform Min-Max normalization. For any indicator 1044 k ∈ {EDR,RCV }, the normalized value Norm(k(b)) is calculated as:
+[530] [Normal] (12)
+[531] [Normal] 1045 where min(k) and max(k) denote the minimum and maximum values of the metric across the entire 1046 set of 158 validated benchmarks. By mapping these indicators to the [0,1] interval, we effectively 1047 decouple the distributional shape from the magnitude scale. Within this normalized space, any
+[532] [Normal] 1048 observed fluctuation, represented by the standard deviation, solely reflects the contrast intensity of 1049 the metric in evaluating benchmark health, rather than being an artifact of the raw calculation formula 1050 or sampling density.
+[533] [Normal] D.3	Mathematical Derivation of SDM Weighting
+[534] [Normal] Within the normalized coordinate system, we employ SDM to determine the weights wk, aiming to 1053 amplify signals with higher information load:
+[535] [Normal] 1054	1. Calculation of Normalized Standard Deviation: For each indicator k ∈ {EDR,RCV }, 1055	we compute its standard deviation σk across all benchmarks:
+[536] [Normal] (13)
+[538] [Normal] 1056	where M = 158 and Norm(k) denotes the mean value of the normalized metric in the 1057	sample set.
+[539] [Normal] 1058 2. Weight Allocation: The weight wk is determined by the proportion of the indicator’s 1059 standard deviation relative to the total:
+[540] [Normal] (14)
+[541] [Normal] 1060 This mechanism ensures that if a metric remains more dispersed after normalization, it 1061 demonstrates higher sensitivity to the varying "health statuses" of different benchmarks and 1062 is thus assigned a higher weight.
+[542] [Heading 1] 1063 E	Expanded Data Pipeline
+[543] [Normal] 1064 BHI employs a multi-stage pipeline to filter, standardize, and calibrate results from heterogeneous 1065 evaluation sets. As illustrated in Figure 3, the workflow refines a broad corpus into a high-fidelity 1066 benchmark through three stages: collection, alignment, and validation.
+[544] [Normal] E.1	Data Collection
+[545] [Normal] We screened the official technical reports of 117 representative models released between 2025 and 1069 April 2026 to aggregate an initial corpus of 416 candidate benchmarks. Among them, 91 models 1070 were released in 2025, whose chronological distribution is shown in Figure 8. This selection covers 1071 both the 2025 model ecosystem and early-2026 frontier releases, providing sufficient coverage of 1072 generalized and specialized model capabilities.
+[546] [Normal] E.2	Data Alignment
+[547] [Normal] To ensure comparability across disparate metrics and varying evaluation conditions, we implement a 1075 multi-stage alignment protocol. This process standardizes raw scores and addresses the structured 1076 requirements of different benchmarks.
+[548] [Normal] E.2.1	Filtering, Normalization and calibration
+[549] [Normal] We apply a Minimum Participation Threshold to exclude benchmarks evaluated by fewer than 1079 three models, ensuring the statistical validity of our dispersion-based metrics. Subsequently, all 1080 scores are normalized to a [0,100] scale. For cost-oriented metrics where lower values indicate 1081 better performance, we apply a subtraction-based transformation to align them with a standard 1082 reward-centric orientation.
+[550] [Normal] For open-ended metrics lacking a theoretical maximum—such as task-specific throughput or reward-
+[551] [Normal] modeling scores—we apply a Headroom Buffer Factor of 1.25. The normalized score Snorm is 1085 calculated as:
+[552] [Normal] Sraw
+[553] [Normal] Snorm =	 × 100	(15)
+[554] [Normal] 1.25Smax,obs
+[555] [Normal] 1086 where Smax,obs represents the maximum observed performance within the dataset. As illustrated in 1087 the Calibration step of Figure 3(a), this maps the current SOTA performance to 80 points, reserving a 1088 20% headroom buffer. This mechanism effectively mitigates ceiling effects and stabilizes saturation 1089 diagnostics as model performance continues to evolve.
+[556] [Normal] E.2.2	Specialized Handling
+[557] [Normal] For temporal datasets such as LiveCodeBench, we aggregated fragmented, time-bound snapshots into 1092 major version clusters under the assumption of difficulty invariance. This consolidation maintains 1093 a dense evaluation matrix while preserving the temporal integrity of the data. For tool-augmented
+[558] [Normal] evaluations, we implemented a bifurcated selection policy: we utilized base-ability scores for Capa-
+[559] [Normal] bility Discrimination to isolate the benchmark’s intrinsic resolution in separating model architectures, 1096 while incorporating all performance gains—including agentic and retrieval-based optimizations—for 1097 Anti-Saturation to evaluate the practical exhaustion of the task environment.
+[560] [Normal] E.3	Validated Benchmark Set
+[561] [Normal] After rigorous alignment and filtering, we retained 158 validated benchmarks. The domain distribution 1100 (Figure 3(b)) highlights BHI’s diverse evaluation dimensions, covering core domains like Reasoning 1101 (20.0%) and Multimodal (14.8%) alongside Mathematics and Code generation. Moreover, the vendor
+[562] [Normal] 1102 distribution (Figure 3(c)) reflects ecosystem diversity, spanning closed-source (OpenAI, Anthropic), 1103 open-source (DeepSeek, Alibaba), and domain-specific models (Meituan, Xiaomi). This curated suite 1104 establishes a high-fidelity foundation for statistical analysis and BHI health metric computation.
+[563] [Heading 1] 1105 F	CRITIC Objective Weighting Method
+[564] [Normal] 1106 This section provides the detailed mathematical derivation for the CRITIC method used to synthesize 1107 the final BHI from the three primary dimensions: SDisc, SAS, and SImp.
+[565] [Normal] F.1	Statistical Logic of the CRITIC Method
+[566] [Normal] The CRITIC method is an objective weighting approach that evaluates the importance of each
+[567] [Normal] dimension by considering both its contrast intensity and the conflicting character between indicators.
+[568] [Normal] Unlike simpler methods like the entropy weight method, CRITIC accounts for the correlations 1112 between variables, ensuring that the weights reflect the total independent information volume carried 1113 by each dimension within the global distribution of the benchmarks.
+[569] [Normal] F.2	Mathematical Derivation Steps
+[570] [Normal] Let M denote the total number of benchmarks and n denote the number of evaluation dimensions 1116 (n = 3).
+[571] [Normal] 1. Dimensional Normalization: Since the calculation logics for SDisc, SAS, and SImp differ,
+[572] [Normal] all input dimensions are first mapped to the [0,1] interval via Min-Max normalization to 1119 eliminate the influence of scales and units.
+[573] [Normal] 2. Calculation of Contrast Intensity: The contrast intensity of the j-th dimension is rep-
+[574] [Normal] resented by its standard deviation σj. A higher standard deviation indicates a greater 1122 variation in values across different benchmarks, suggesting that the dimension provides 1123 more discriminative information.
+[575] [Normal] (16)
+[576] [Normal] where xbj is the normalized score of benchmark b on dimension j, and x¯j is the mean value.
+[577] [Normal] 3. Calculation of Conflicting Character: The conflicting character represents the degree of 1126 correlation between indicators. Let rjk denote the Pearson correlation coefficient between 1127 the j-th and k-th dimensions. If a dimension is highly correlated with others, it contains 1128 more redundant information, and its independent weight should be adjusted accordingly. 1129 The conflict index Rj is defined as:
+[578] [Normal] (17)
+[579] [Normal] 1130	4. Calculation of Information Volume: The comprehensive information volume Cj for the 1131	j-th dimension is the product of its contrast intensity and its conflicting character. A larger
+[580] [Normal] Cj value indicates that the dimension carries more total information within the evaluation
+[581] [Normal] system.
+[582] [Normal] n
+[583] [Normal] Cj = σj · Rj = σj X(1 − rjk)	(18)
+[584] [Normal] k=1
+[585] [Normal] 5. Determination of Final Weights: The final objective weights wj are obtained by normaliz-
+[586] [Normal] ing the Cj values:
+[587] [Normal] (19)
+[588] [Heading 1] 1136 G	Robustness under Score Noise and Model Dropout
+[589] [Normal] This appendix evaluates the robustness of BHI under two common sources of instability in large-
+[590] [Normal] scale benchmark meta-analysis: score perturbation and incomplete model coverage.	The first
+[591] [Normal] experiment injects controlled Gaussian noise into benchmark scores, simulating reporting variation, 1140 measurement uncertainty, and minor evaluation inconsistencies. The second experiment randomly 1141 removes evaluated models, simulating incomplete reporting and partial benchmark coverage.
+[592] [Normal] 1142 For both experiments, we rerun the full BHI computation pipeline after perturbation, including 1143 score normalization, LOBO-based model capability calibration, component construction, and final
+[593] [Normal] 1144 aggregation. We compare the perturbed rankings with the original baseline ranking using Spearman 1145 rank correlation, Kendall rank correlation, top-k overlap, and mean rank shift. To evaluate whether 1146 the CRITIC weighting scheme improves stability, we also report results under an equal-weight 1147 aggregation baseline.
+[594] [Normal] G.1	Robustness to Gaussian Score Noise
+[595] [Normal] We inject Gaussian noise into the normalized benchmark scores under different noise levels σ ∈ 1150 {0.01,0.02,0.05,0.10,0.15,0.20}. Scores are clipped to the valid interval after perturbation. For 1151 each noise level, the complete BHI pipeline is recomputed over repeated trials, and the resulting 1152 rankings are compared with the clean baseline.
+[596] [Normal] Table 5: Noise robustness under CRITIC weighting. Score stability is measured as 1−MAE between perturbed and baseline BHI scores.
+[597] [Normal] 1153 Tables 5 and 6 show that BHI rankings remain stable under moderate score perturbations. Under 1154 CRITIC weighting, the Spearman correlation remains above 0.95 when σ ≤ 0.05 and above 0.90 1155 when σ ≤ 0.10. Even under the largest tested perturbation, σ = 0.20, the Spearman correlation 1156 remains 0.8575 and the BHI score stability remains 0.9458. This suggests that the final ranking is not 1157 dominated by small score-level fluctuations.
+[598] [Normal] Compared with equal weighting, CRITIC weighting yields consistently higher Spearman correlation,
+[599] [Normal] Kendall correlation, score stability, and top-10 overlap across most noise levels. The gap becomes 1160 more visible as the noise level increases. This supports the use of CRITIC as a data-driven aggregation 1161 mechanism, because it assigns lower influence to less informative or more redundant components 1162 rather than treating all dimensions as equally reliable under perturbation.
+[600] [Normal] 1163 Figures 9 and 10 visualize the decay of ranking stability as the perturbation magnitude increases. The 1164 degradation is gradual rather than abrupt, indicating that the BHI ranking is robust to realistic levels 1165 of measurement noise.
+[601] [Normal] Noise Robustness of BHI under CRITIC Weighting (MAE Variant)
+[603] [Normal] Figure 9: Noise robustness of BHI under CRITIC weighting.
+[604] [Normal] Noise Robustness of BHI under Equal Weighting (MAE Variant)
+[606] [Normal] Figure 10: Noise robustness of BHI under equal weighting.
+[607] [Normal] G.2	Robustness to Model Dropout
+[608] [Normal] We further evaluate robustness under incomplete model coverage by randomly removing a fraction of 1168 models from the meta-dataset. The dropout ratio ranges from 5% to 60%. After each removal, all 1169 benchmark-level metrics are recomputed from the remaining models. Benchmarks without sufficient 1170 remaining observations are excluded from that trial, and the final ranking is compared against the 1171 original baseline on the common valid set.
+[609] [Normal] Tables 7 and 8 show that the BHI ranking is robust to substantial model removal. Under CRITIC
+[610] [Normal] weighting, the Spearman correlation remains above 0.99 at 10% dropout, above 0.97 up to 30%
+[611] [Normal] dropout, and above 0.92 even when 60% of models are removed. The top-10 overlap also degrades 1175 gradually, indicating that the highest-ranked benchmarks are not highly dependent on a small subset 1176 of model reports.
+[612] [Normal] 1177 The comparison between CRITIC and equal weighting indicates that both aggregation schemes are 1178 stable under model dropout, while CRITIC generally provides slightly stronger top-rank preservation 1179 in the low-to-moderate dropout regime. This is consistent with the role of CRITIC weighting as an 1180 objective mechanism that adjusts component contributions according to their information content and 1181 independence.
+[613] [Normal] Table 7: Model dropout robustness under CRITIC weighting.
+[614] [Heading 1] 1182 H	Sensitivity Analysis of Anti-Saturation Parameters
+[615] [Normal] 1183 The Anti-Saturation score SAS combines a static resistance component SSta and a dynamic saturation 1184 projection component SDyn. In the main experiments, we use a 30-day projection window and
+[616] [Normal] combine the two components as
+[617] [Normal] SAS = 0.8 · SSta + 0.2 · SDyn.
+[618] [Normal] This appendix evaluates whether the final BHI ranking is sensitive to these two design choices.
+[619] [Normal] H.1	Sensitivity to the Dynamic Projection Window
+[620] [Normal] We vary the temporal projection window T from 20 to 40 days and recompute the dynamic saturation
+[621] [Normal] score as
+[623] [Normal] SDyn(b) = max(0,1 − (Scoreb + T · k)).
+[624] [Normal] The default setting corresponds to T = 30 days. For each alternative window size, we recompute the 1191 full BHI ranking and compare it with the default ranking.
+[625] [Normal] Table 9 shows that the BHI ranking is nearly invariant to the temporal projection window. Across all
+[626] [Normal] tested values, the Spearman correlation remains above 0.9998, the top-10 and top-20 sets are fully 1194 preserved, and the average rank shift remains below 0.33. This indicates that the dynamic component 1195 captures only a smooth short-term saturation adjustment and does not introduce instability into the 1196 final ranking.
+[628] [Normal] Figure 11: Ranking stability under model dropout using CRITIC weighting.
+[630] [Normal] Figure 12: Ranking stability under model dropout using equal weighting.
+[631] [Normal] H.2	Sensitivity to Static–Dynamic Weighting
+[632] [Normal] We next vary the relative contribution of SSta and SDyn in the final anti-saturation score. The default 1199 setting assigns 80% weight to the static component and 20% weight to the dynamic component. We 1200 compare this setting with alternative static weights from 0.6 to 0.9.
+[633] [Normal] 1201 As shown in Table 10, the final ranking is also robust to the static–dynamic weighting ratio. All 1202 tested configurations yield Spearman correlations above 0.999, and the top-20 benchmarks are fully
+[634] [Normal] preserved. The largest observed average rank shift is below one position, indicating that the anti-
+[635] [Normal] saturation axis is primarily driven by persistent benchmark headroom rather than by short-term trend 1205 extrapolation.
+[636] [Normal] 1206 Overall, these results support the use of a predominantly static formulation for SAS, while retaining a 1207 smaller dynamic term to reflect short-term score inflation. The selected 0.8/0.2 configuration provides 1208 a conservative balance between present benchmark difficulty and near-future saturation risk.
+[637] [Heading 1] 1209 I	Coverage Bias Analysis
+[638] [Normal] A potential concern for any benchmark-level meta-index is that highly evaluated benchmarks may re-
+[639] [Normal] ceive higher scores simply because they have broader reporting coverage. This concern is particularly 1212 relevant for BHI because the impact component SImp is designed to measure capability-weighted 1213 adoption. We therefore analyze whether the final BHI ranking is dominated by benchmark coverage.
+[640] [Normal] Table 9: Sensitivity of BHI rankings to the temporal projection window in SDyn.
+[641] [Normal] Sensitivity to Temporal Window in Dynamic Anti-Saturation
+[643] [Normal] Figure 13: Sensitivity of BHI rankings to the temporal window used in the dynamic anti-saturation component.
+[644] [Normal] 1214 For each benchmark, we define coverage as the number of models with a valid reported score on that 1215 benchmark. We then compute Pearson and Spearman correlations between coverage and each BHI 1216 component, as well as the final BHI score.
+[645] [Normal] 1217 Table 11 shows that coverage is strongly correlated with SImp, which is expected by construction 1218 because SImp measures capability-weighted adoption. However, coverage has only weak correlation 1219 with SDisc and almost no correlation with SAS. This indicates that broader reporting does not 1220 automatically imply stronger discriminative power or greater resistance to saturation.
+[646] [Normal] 1221 The final BHI score exhibits only moderate correlation with coverage, with Pearson correlation 1222 0.4737 and Spearman correlation 0.4000. This suggests that benchmark coverage contributes to the 1223 final score through the impact dimension, but does not dominate the overall ranking. In particular, a
+[647] [Normal] 1224 benchmark must still provide discriminative resolution and saturation resistance to receive a high 1225 BHI score.
+[648] [Normal] Figure 15 provides a complementary visualization. Although the fitted trend line is positive, the
+[649] [Normal] scatter distribution is broad: benchmarks with similar coverage can receive substantially different 1228 BHI scores, and several low-coverage benchmarks obtain competitive BHI values when they exhibit 1229 strong discrimination or anti-saturation properties. Conversely, some widely reported benchmarks 1230 receive relatively low BHI scores due to saturation or reduced discriminative capacity.
+[650] [Normal] These results confirm that BHI is not a proxy for benchmark popularity or reporting frequency.
+[651] [Normal] Instead, the final score reflects a balance among technical resolution, remaining headroom, and 1233 capability-weighted adoption.
+[652] [Heading 1] 1234 J	Expanded Case Study
+[653] [Normal] To illustrate how BHI supports benchmark-level diagnosis rather than merely producing a scalar rank-
+[654] [Normal] ing, we analyze three representative cases with distinct metric profiles: Humanity’s Last Exam as the Table 10: Sensitivity of BHI rankings to the static–dynamic weighting in SAS.
+[655] [Normal] Sensitivity to Static/Dynamic Weights in Anti-Saturation
+[657] [Normal] Figure 14: Sensitivity of BHI rankings to the relative weighting between static resistance and dynamic saturation projection.
+[658] [Normal] strongest overall frontier benchmark in the Knowledge QA category, SimpleQA as a high-resolution
+[659] [Normal] short-form factuality benchmark, and ZeroBench as a reasoning benchmark with limited current adop1239 tion but substantial remaining headroom. These cases show that the three BHI dimensions capture 1240 different types of benchmark value and potential limitations in the current evaluation ecosystem.
+[660] [Normal] Humanity’s Last Exam.	Humanity’s Last Exam (HLE) [21] ranks first in our benchmark audit
+[661] [Normal] with a BHI score of 0.6846. Its advantage does not come from an extreme value on a single axis,
+[662] [Normal] but from a balanced and consistently strong profile across discrimination, saturation resistance, and 1244 impact. Specifically, HLE achieves SDisc = 0.6608, SSat = 0.6299, and SImp = 0.7710, indicating 1245 that it can separate current models effectively, preserve sufficient remaining challenge space, and 1246 maintain broad ecosystem recognition. This makes HLE a suitable anchor for tracking frontier 1247 progress in knowledge-intensive and reasoning-oriented evaluation: it combines technical difficulty 1248 with stable and influential reporting value in the broader evaluation ecosystem.
+[663] [Normal] SimpleQA.	SimpleQA [22] obtains a BHI score of 0.5857, reflecting the distinctive role of short-
+[664] [Normal] form factuality evaluation in the current benchmark landscape. Its strongest advantage lies in 1251 Capability Discrimination, where it reaches SDisc = 0.8130, the highest among the three cases.
+[665] [Normal] 1252 This suggests that SimpleQA’s concise and unambiguous question design reduces interference 1253 from complex linguistic formulation and multi-step reasoning, thereby isolating differences in
+[666] [Normal] factual answering ability more effectively. At the same time, its saturation score remains moderate
+[667] [Normal] (SSat = 0.5043), indicating that it still preserves useful challenge space, though its long-term frontier-
+[668] [Normal] tracking capacity is more limited than that of HLE or ZeroBench. Its impact score (SImp = 0.4435)
+[669] [Normal] further suggests that SimpleQA has gained meaningful adoption, but has not yet reached the ecosystem 1258 coverage of broader frontier benchmarks such as HLE. Therefore, SimpleQA is best viewed as a 1259 high-resolution diagnostic tool for factuality evaluation rather than as a standalone benchmark for 1260 long-term frontier capability tracking.
+[670] [Normal] 1261 ZeroBench. ZeroBench [24] exhibits a different metric structure. Although its impact score is 1262 limited (SImp = 0.2498), BHI assigns it a relatively high overall score of 0.5593 due to its strong Table 11: Correlation between benchmark coverage and BHI components.
+[671] [Normal] Coverage Bias Analysis
+[673] [Normal] Figure 15: Relationship between benchmark coverage and final BHI score. Coverage is measured as the number of models with valid scores on each benchmark.
+[674] [Normal] structural health. Its saturation score reaches SSat = 0.8687, the highest among the three cases,
+[675] [Normal] indicating that current models remain far from exhausting its challenge space. Meanwhile, its 1265 discrimination score (SDisc = 0.5205) suggests that the benchmark has not collapsed into uniform 1266 failure, but can still produce meaningful performance variation across models. This profile identifies 1267 ZeroBench as a high-headroom reasoning benchmark whose current adoption underestimates its
+[676] [Normal] 1268 technical value. For benchmark governance, such cases are important because they reveal high-quality 1269 evaluators that deserve more systematic reporting despite relatively weak community momentum.
+[677] [Normal] J.1	Domain-Specific Analysis
+[678] [Normal] This section provides a domain analysis of 158 benchmarks, offering strategic insights for the design 1272 of next-generation evaluation suites and the selection of performance metrics.
+[679] [Normal] J.1.1	Mathematics
+[680] [Normal] In the mathematical domain, a moderate negative correlation (r = −0.22) between Impact and Anti-
+[681] [Normal] Saturation suggests that high-impact assets tend toward technical obsolescence. The inherent logical 1276 consistency of mathematical reasoning likely facilitates rapid pattern internalization by successor 1277 models once these assets are extensively benchmarked.
+[682] [Normal] GSM8K [30]	BHI metrics characterize GSM8K as a saturated legacy benchmark. Its minimal anti-
+[683] [Normal] saturation score (SAS = 0.0865) and low overall BHI (0.2199) quantify a terminal loss of diagnostic 1280 utility for frontier model architectures. Although SDisc remains at 0.3920, the data indicates that 1281 GSM8K has transitioned from a research probe into a historical baseline representing past consensus 1282 rather than modern technical challenges.
+[684] [Normal] FrontierMath [49]	FrontierMath exhibits high technical resilience, defined by a robust anti-
+[685] [Normal] saturation score (SAS = 0.6102). While its current impact score (SImp = 0.3339) reflects an early 1285 adoption phase, the BHI of 0.5093 highlights its capacity to resist pattern matching. The indicators 1286 suggest that by requiring precise mathematical objects, the benchmark maintains the necessary 1287 evaluative headroom for future model scaling.
+[686] [Normal] J.1.2	Agent
+[687] [Normal] The agentic and tool-use domain exhibits a healthy positive correlation (r = 0.30) between Impact 1290 and Anti-Saturation, suggesting that the community consensus is anchored towards benchmarks that 1291 maintain high technical difficulty and environmental complexity.
+[688] [Normal] 1292 Tau-bench Series [50, 26] The Tau-bench series illustrates how metric profiles reveal the divergent 1293 evaluation longevity of sub-scenarios. The Airline subset maintains an SAS of 0.4798, indicating 1294 robust resistance to templated learning through its multi-constraint game-theoretic designs, such 1295 as complex booking and refund policies. In contrast, the Telecom subset, despite its exceptionally 1296 high discrimination score (SDisc = 0.9005), exhibits a rapid decay in SAS to 0.1108. This sharp 1297 contrast suggests that while its logic is highly precise for ranking, procedural workflows are more 1298 susceptible to standardization once model architectures master the underlying patterns, leading to a 1299 BHI of 0.4921.
+[689] [Normal] 1300 BrowseComp [23] BrowseComp yields an SDisc of 0.8042 and a BHI of 0.5845, validating the 1301 efficacy of its reverse-design methodology. The SAS of 0.3281 shows that constructing queries from 1302 rare facts effectively prevents models from relying on internal knowledge or direct keyword matching.
+[690] [Normal] 1303 By forcing models toward multi-step, creative search strategies in dynamic web environments, the 1304 benchmark maintains strong evaluative vitality and prevents premature saturation of its performance 1305 metrics.
+[691] [Normal] J.1.3	Code
+[692] [Normal] The paradigm of Code evaluation is shifting, evidenced by the decoupling of SImp and SAS, moving 1308 from algorithmic puzzles to comprehensive engineering productivity.
+[693] [Normal] 1309 HumanEval [51] and MBPP [52] BHI diagnostics confirm the diminishing utility of traditional 1310 benchmarks. Low BHI scores (0.2787 for HumanEval; 0.2371 for MBPP) and stagnant SAS (0.1669 1311 and 0.1744, respectively) suggest their focus on function-level algorithms has been neutralized by
+[694] [Normal] 1312 training data saturation. These metrics indicate that such benchmarks can no longer effectively 1313 distinguish genuine reasoning from memorized patterns, as performance gaps narrow below the 1314 threshold of effective discrimination.
+[695] [Normal] 1315 SWE-bench [53] SWE-bench evaluates engineering proficiency through real-world issue resolution 1316 in large-scale repositories. Its diagnostic profile, characterized by BHI = 0.5293 and SDisc =
+[696] [Normal] 0.6093, stems from an execution-based scoring mechanism. Significant SImp (0.7336) and SAS
+[697] [Normal] (0.2754) scores quantify the necessity for a full engineering loop, including fault localization and 1319 unit testing. These indicators confirm the benchmark’s capacity to target high-level productivity and 1320 complex environment navigation.
+[698] [Normal] J.1.4	Subject
+[699] [Normal] The Subject domain is the most susceptible to data contamination, with a median SAS approximately 1323 53.75% lower than the overall median across all evaluation sets.
+[700] [Normal] C-Eval [34]	C-Eval faces a similar obsolescence crisis (BHI 0.2098), driven by a critical collapse
+[701] [Normal] in its anti-saturation metric (SAS to 0.0935). This indicates significant training data leakage. Conse1326 quently, C-Eval has lost its stratifying power (SDisc of 0.2674), evolving into a memorization check 1327 rather than a gauge of generalized subject mastery.
+[702] [Normal] MMLU-Pro [28]	In contrast, MMLU-Pro (BHI 0.3919) demonstrates the potential for rehabil-
+[703] [Normal] itating subject-based benchmarks. By increasing reasoning complexity and expanding the option 1330 space, it restores discriminatory utility (SDisc of 0.4572), significantly exceeding the domain average. 1331 Although its SAS (0.1727) suggests contamination remains a challenge, the recovery in discrimination 1332 confirms MMLU-Pro’s efficacy in distinguishing capabilities among top-tier models.
+[704] [Normal] J.1.5	Application
+[705] [Normal] The Application domain benchmarks evaluate models under real-world deployment conditions,
+[706] [Normal] spanning agent-oriented customer service pipelines, financial information retrieval, and high-stakes 1336 medical consultation. The domain exhibits a moderate positive correlation (r = 0.21) between 1337 Impact and Anti-Saturation, suggesting that practical deployment pressures tend to favor benchmarks 1338 whose task complexity resists rapid memorization.
+[707] [Normal] 1339 GDPval-AA Elo [27] GDPval-AA Elo achieves a competitive BHI of 0.4225 with a well-rounded 1340 diagnostic profile. Its SDisc of 0.5962 demonstrates reliable stratification power across frontier
+[708] [Normal] models, while an SImp of 0.3409 reflects meaningful community adoption, confirming that LLM-as-
+[709] [Normal] judge frameworks grounded in calibrated preference signals are gaining credibility as an alternative to 1343 static answer-key evaluation for open-ended tasks. The SAS of 0.3362 indicates moderate evaluative 1344 durability; the diversity of judge-model pairings and the use of Elo-based ranking provide a structural 1345 buffer against convergence, preserving useful headroom for successive model generations. Taken 1346 together, GDPval-AA Elo exemplifies how human-preference-calibrated evaluation can deliver both 1347 practical utility and sustained discriminatory power at the frontier.
+[710] [Normal] HealthBench Hard [54]	HealthBench Hard stands out within the Application domain for its
+[711] [Normal] exceptional anti-saturation properties, recording an SAS of 0.5924 and a BHI of 0.4546. Its scenario1350 grounded design—requiring expert-validated clinical judgment across low-resource and high-stakes
+[712] [Normal] medical contexts—renders surface-level pattern matching ineffective and preserves meaningful per-
+[713] [Normal] formance headroom. The SDisc of 0.5876 confirms that the benchmark retains strong differentiating 1353 power among frontier systems. Although its SImp of 0.1617 reflects an early adoption phase, the 1354 high SAS indicates that the benchmark’s complexity is intrinsic rather than incidental, positioning it 1355 as a durable and rigorous instrument for tracking genuine medical reasoning capacity over successive 1356 model generations.
+[714] [Normal] HealthBench [54]	The base HealthBench benchmark presents a notably weaker profile, with a
+[715] [Normal] BHI of 0.3524 and an SDisc of 0.4479, indicating insufficient stratifying power at the current perfor-
+[716] [Normal] mance frontier. While its SAS of 0.4016 remains moderate, the low SImp of 0.1983 signals limited 1360 penetration in active leaderboard circuits. As frontier models converge on the primary evaluation
+[717] [Normal] scenarios, HealthBench is gradually transitioning toward a legacy role, with its discriminatory utility
+[718] [Normal] increasingly superseded by its harder counterpart. These indicators suggest that for frontier-model 1363 evaluation purposes, HealthBench Hard has largely displaced the base version as the more informative 1364 diagnostic tool.
+[719] [Heading 1] 1365 K	Compute Resources
+[720] [Normal] 1366 All experiments in this work are lightweight post-hoc meta-analytic computations over publicly 1367 reported benchmark scores. We do not train, fine-tune, or run inference with any large language
+[721] [Normal] model, and no GPU resources are required. The BHI computation, ablation study, robustness analysis,
+[722] [Normal] and sensitivity analysis can be reproduced on a standard CPU workstation or laptop with ordinary 1370 memory requirements. The total runtime is dominated by data parsing and repeated recomputation of 1371 the BHI pipeline rather than model training or benchmark execution.
+[723] [Normal] Table 12: Detailed BHI Metric Results and Sub-metric Results
+[724] [Normal] Continued on next page
+[725] [Normal] Table 12 – continued from previous page
+[726] [Normal] Continued on next page
+[727] [Normal] Table 12 – continued from previous page
+[729] [Heading 1] 1372 NeurIPS Paper Checklist
+[730] [Normal] 1. Claims
+[731] [Normal] Question: Do the main claims made in the abstract and introduction accurately reflect the 1375	paper’s contributions and scope?
+[732] [Normal] Answer: [Yes]
+[733] [Normal] Justification: The main claims made in the abstract and introduction accurately reflect the 1378	main paper’s contributions and scope.
+[734] [Normal] Guidelines:
+[735] [Normal] • The answer [N/A] means that the abstract and introduction do not include the claims
+[736] [Normal] made in the paper.
+[737] [Normal] • The abstract and/or introduction should clearly state the claims made, including the 1383 contributions made in the paper and important assumptions and limitations. A [No] or 1384 [N/A] answer to this question will not be perceived well by the reviewers.
+[738] [Normal] 1385	• The claims made should match theoretical and experimental results, and reflect how 1386	much the results can be expected to generalize to other settings.
+[739] [Normal] 1387	• It is fine to include aspirational goals as motivation as long as it is clear that these goals 1388	are not attained by the paper.
+[740] [Normal] 2. Limitations
+[741] [Normal] Question: Does the paper discuss the limitations of the work performed by the authors?
+[742] [Normal] Answer: [Yes]
+[743] [Normal] Justification: This paper discusses the limitation in section A
+[744] [Normal] Guidelines:
+[745] [Normal] • The answer [N/A] means that the paper has no limitation while the answer [No] means 1395	that the paper has limitations, but those are not discussed in the paper.
+[746] [Normal] • The authors are encouraged to create a separate “Limitations” section in their paper.
+[747] [Normal] • The paper should point out any strong assumptions and how robust the results are to
+[748] [Normal] violations of these assumptions (e.g., independence assumptions, noiseless settings,
+[749] [Normal] model well-specification, asymptotic approximations only holding locally). The authors 1400 should reflect on how these assumptions might be violated in practice and what the 1401 implications would be.
+[750] [Normal] 1402 • The authors should reflect on the scope of the claims made, e.g., if the approach was 1403 only tested on a few datasets or with a few runs. In general, empirical results often 1404 depend on implicit assumptions, which should be articulated.
+[751] [Normal] • The authors should reflect on the factors that influence the performance of the approach.
+[752] [Normal] For example, a facial recognition algorithm may perform poorly when image resolution 1407 is low or images are taken in low lighting. Or a speech-to-text system might not be 1408 used reliably to provide closed captions for online lectures because it fails to handle
+[753] [Normal] technical jargon.
+[754] [Normal] • The authors should discuss the computational efficiency of the proposed algorithms 1411 and how they scale with dataset size.
+[755] [Normal] 1412 • If applicable, the authors should discuss possible limitations of their approach to 1413 address problems of privacy and fairness.
+[756] [Normal] 1414 • While the authors might fear that complete honesty about limitations might be used by 1415 reviewers as grounds for rejection, a worse outcome might be that reviewers discover 1416 limitations that aren’t acknowledged in the paper. The authors should use their best
+[757] [Normal] 1417	judgment and recognize that individual actions in favor of transparency play an impor1418	tant role in developing norms that preserve the integrity of the community. Reviewers 1419	will be specifically instructed to not penalize honesty concerning limitations.
+[758] [Normal] 3. Theory assumptions and proofs
+[759] [Normal] Question: For each theoretical result, does the paper provide the full set of assumptions and 1422	a complete (and correct) proof?
+[760] [Normal] Answer: [N/A]
+[761] [Normal] Justification: The paper does not present formal theoretical results requiring proofs; the 1425 metric formulations are defined in Section 3 and detailed in Appendices D and F.
+[762] [Normal] Guidelines:
+[763] [Normal] • The answer [N/A] means that the paper does not include theoretical results.
+[764] [Normal] • All the theorems, formulas, and proofs in the paper should be numbered and cross-
+[765] [Normal] referenced.
+[766] [Normal] • All assumptions should be clearly stated or referenced in the statement of any theorems.
+[767] [Normal] • The proofs can either appear in the main paper or the supplemental material, but if 1432 they appear in the supplemental material, the authors are encouraged to provide a short 1433 proof sketch to provide intuition.
+[768] [Normal] 1434 • Inversely, any informal proof provided in the core of the paper should be complemented 1435 by formal proofs provided in appendix or supplemental material.
+[769] [Normal] • Theorems and Lemmas that the proof relies upon should be properly referenced.
+[770] [Normal] 4. Experimental result reproducibility
+[771] [Normal] Question: Does the paper fully disclose all the information needed to reproduce the main ex-
+[772] [Normal] perimental results of the paper to the extent that it affects the main claims and/or conclusions 1440 of the paper (regardless of whether the code and data are provided or not)?
+[773] [Normal] Answer: [Yes]
+[774] [Normal] Justification: The paper provides the information needed to reproduce the main results 1443 through the metric definitions in Section 3, the data pipeline in Section 4 and Appendix E, 1444 and the robustness settings in Appendices C, G, and H.
+[775] [Normal] Guidelines:
+[776] [Normal] • The answer [N/A] means that the paper does not include experiments.
+[777] [Normal] • If the paper includes experiments, a [No] answer to this question will not be perceived 1448 well by the reviewers: Making the paper reproducible is important, regardless of 1449 whether the code and data are provided or not.
+[778] [Normal] 1450 • If the contribution is a dataset and/or model, the authors should describe the steps taken 1451 to make their results reproducible or verifiable.
+[779] [Normal] • Depending on the contribution, reproducibility can be accomplished in various ways.
+[780] [Normal] For example, if the contribution is a novel architecture, describing the architecture fully 1454	might suffice, or if the contribution is a specific model and empirical evaluation, it may 1455	be necessary to either make it possible for others to replicate the model with the same 1456	dataset, or provide access to the model. In general. releasing code and data is often 1457	one good way to accomplish this, but reproducibility can also be provided via detailed 1458	instructions for how to replicate the results, access to a hosted model (e.g., in the case 1459	of a large language model), releasing of a model checkpoint, or other means that are 1460	appropriate to the research performed.
+[781] [Normal] • While NeurIPS does not require releasing code, the conference does require all submis-
+[782] [Normal] sions to provide some reasonable avenue for reproducibility, which may depend on the 1463	nature of the contribution. For example
+[783] [Normal] 1464	(a) If the contribution is primarily a new algorithm, the paper should make it clear how 1465	to reproduce that algorithm.
+[784] [Normal] 1466	(b) If the contribution is primarily a new model architecture, the paper should describe 1467	the architecture clearly and fully.
+[785] [Normal] 1468 (c) If the contribution is a new model (e.g., a large language model), then there should 1469 either be a way to access this model for reproducing the results or a way to reproduce 1470 the model (e.g., with an open-source dataset or instructions for how to construct
+[786] [Normal] the dataset).
+[787] [Normal] (d) We recognize that reproducibility may be tricky in some cases, in which case 1473 authors are welcome to describe the particular way they provide for reproducibility. 1474 In the case of closed-source models, it may be that access to the model is limited in 1475 some way (e.g., to registered users), but it should be possible for other researchers 1476 to have some path to reproducing or verifying the results.
+[788] [Normal] 5. Open access to data and code
+[789] [Normal] Question: Does the paper provide open access to the data and code, with sufficient instruc-
+[790] [Normal] tions to faithfully reproduce the main experimental results, as described in supplemental
+[791] [Normal] material?
+[792] [Normal] Answer: [Yes]
+[793] [Normal] Justification: The paper provides an anonymous repository for the released code and bench-
+[794] [Normal] mark metadata, while the reproduction-relevant processing steps are described in Section 3
+[795] [Normal] and Appendix E.
+[796] [Normal] Guidelines:
+[797] [Normal] • The answer [N/A] means that paper does not include experiments requiring code.
+[798] [Normal] • Please see the NeurIPS code and data submission guidelines (https://neurips.cc/ 1488	public/guides/CodeSubmissionPolicy) for more details.
+[799] [Normal] 1489 • While we encourage the release of code and data, we understand that this might not 1490 be possible, so [No] is an acceptable answer. Papers cannot be rejected simply for not 1491 including code, unless this is central to the contribution (e.g., for a new open-source
+[800] [Normal] benchmark).
+[801] [Normal] • The instructions should contain the exact command and environment needed to run to 1494	reproduce the results. See the NeurIPS code and data submission guidelines (https:
+[802] [Normal] //neurips.cc/public/guides/CodeSubmissionPolicy) for more details.
+[803] [Normal] • The authors should provide instructions on data access and preparation, including how 1497	to access the raw data, preprocessed data, intermediate data, and generated data, etc.
+[804] [Normal] 1498 • The authors should provide scripts to reproduce all experimental results for the new 1499 proposed method and baselines. If only a subset of experiments are reproducible, they 1500 should state which ones are omitted from the script and why.
+[805] [Normal] 1501 • At submission time, to preserve anonymity, the authors should release anonymized 1502 versions (if applicable).
+[806] [Normal] 1503	• Providing as much information as possible in supplemental material (appended to the 1504	paper) is recommended, but including URLs to data and code is permitted.
+[807] [Normal] 6. Experimental setting/details
+[808] [Normal] Question: Does the paper specify all the training and test details (e.g., data splits, hyperpa1507	rameters, how they were chosen, type of optimizer) necessary to understand the results?
+[809] [Normal] Answer: [Yes]
+[810] [Normal] Justification: The experimental settings are specified through the BHI metric definitions 1510 in Section 3, the data pipeline in Section 4, and the expanded implementation details in
+[811] [Normal] Appendix E.
+[812] [Normal] Guidelines:
+[813] [Normal] • The answer [N/A] means that the paper does not include experiments.
+[814] [Normal] • The experimental setting should be presented in the core of the paper to a level of detail 1515 that is necessary to appreciate the results and make sense of them.
+[815] [Normal] • The full details can be provided either with the code, in appendix, or as supplemental
+[816] [Normal] material.
+[817] [Normal] 7. Experiment statistical significance
+[818] [Normal] Question: Does the paper report error bars suitably and correctly defined or other appropriate 1520 information about the statistical significance of the experiments?
+[819] [Normal] Answer: [Yes]
+[820] [Normal] Justification: The paper reports robustness and sensitivity analyses for the main conclusions 1523	in Section 5.1, Appendix C, Appendix G, Appendix H, and Appendix I.
+[821] [Normal] Guidelines:
+[822] [Normal] • The answer [N/A] means that the paper does not include experiments.
+[823] [Normal] • The authors should answer [Yes] if the results are accompanied by error bars, confidence 1527 intervals, or statistical significance tests, at least for the experiments that support the
+[824] [Normal] main claims of the paper.
+[825] [Normal] • The factors of variability that the error bars are capturing should be clearly stated (for 1530	example, train/test split, initialization, random drawing of some parameter, or overall 1531	run with given experimental conditions).
+[826] [Normal] • The method for calculating the error bars should be explained (closed form formula,
+[827] [Normal] call to a library function, bootstrap, etc.)
+[828] [Normal] • The assumptions made should be given (e.g., Normally distributed errors).
+[829] [Normal] • It should be clear whether the error bar is the standard deviation or the standard error
+[830] [Normal] of the mean.
+[831] [Normal] • It is OK to report 1-sigma error bars, but one should state it. The authors should 1538 preferably report a 2-sigma error bar than state that they have a 96% CI, if the hypothesis 1539 of Normality of errors is not verified.
+[832] [Normal] • For asymmetric distributions, the authors should be careful not to show in tables or
+[833] [Normal] figures symmetric error bars that would yield results that are out of range (e.g., negative
+[834] [Normal] error rates).
+[835] [Normal] • If error bars are reported in tables or plots, the authors should explain in the text how 1544	they were calculated and reference the corresponding figures or tables in the text.
+[836] [Normal] 8. Experiments compute resources
+[837] [Normal] Question: For each experiment, does the paper provide sufficient information on the com-
+[838] [Normal] puter resources (type of compute workers, memory, time of execution) needed to reproduce 1548	the experiments?
+[839] [Normal] Answer: [Yes]
+[840] [Normal] Justification: As explained in Appendix K, the experiments do not involve model training or 1551	fine-tuning.
+[841] [Normal] Guidelines:
+[842] [Normal] • The answer [N/A] means that the paper does not include experiments.
+[843] [Normal] • The paper should indicate the type of compute workers CPU or GPU, internal cluster, 1555	or cloud provider, including relevant memory and storage.
+[844] [Normal] 1556	• The paper should provide the amount of compute required for each of the individual 1557	experimental runs as well as estimate the total compute.
+[845] [Normal] 1558 • The paper should disclose whether the full research project required more compute 1559 than the experiments reported in the paper (e.g., preliminary or failed experiments that 1560 didn’t make it into the paper).
+[846] [Normal] 9. Code of ethics
+[847] [Normal] Question: Does the research conducted in the paper conform, in every respect, with the 1563 NeurIPS Code of Ethics https://neurips.cc/public/EthicsGuidelines?
+[848] [Normal] Answer: [Yes]
+[849] [Normal] Justification: The study analyzes publicly reported benchmark results and releases 1566 anonymized research artifacts, and we are not aware of any aspect that deviates from 1567 the NeurIPS Code of Ethics.
+[850] [Normal] Guidelines:
+[851] [Normal] • The answer [N/A] means that the authors have not reviewed the NeurIPS Code of
+[852] [Normal] Ethics.
+[853] [Normal] • If the authors answer [No], they should explain the special circumstances that require a 1572	deviation from the Code of Ethics.
+[854] [Normal] 1573	• The authors should make sure to preserve anonymity (e.g., if there is a special consid1574	eration due to laws or regulations in their jurisdiction).
+[855] [Normal] 10. Broader impacts
+[856] [Normal] Question: Does the paper discuss both potential positive societal impacts and negative 1577 societal impacts of the work performed?
+[857] [Normal] Answer: [Yes]
+[858] [Normal] Justification: This paper discusses the impact in Section 5
+[859] [Normal] Guidelines:
+[860] [Normal] • The answer [N/A] means that there is no societal impact of the work performed.
+[861] [Normal] • If the authors answer [N/A] or [No], they should explain why their work has no societal 1583 impact or why the paper does not address societal impact.
+[862] [Normal] 1584 • Examples of negative societal impacts include potential malicious or unintended uses 1585 (e.g., disinformation, generating fake profiles, surveillance), fairness considerations 1586 (e.g., deployment of technologies that could make decisions that unfairly impact specific 1587 groups), privacy considerations, and security considerations.
+[863] [Normal] 1588	• The conference expects that many papers will be foundational research and not tied 1589	to particular applications, let alone deployments. However, if there is a direct path to 1590	any negative applications, the authors should point it out. For example, it is legitimate 1591	to point out that an improvement in the quality of generative models could be used to 1592	generate Deepfakes for disinformation. On the other hand, it is not needed to point out 1593	that a generic algorithm for optimizing neural networks could enable people to train 1594	models that generate Deepfakes faster.
+[864] [Normal] 1595 • The authors should consider possible harms that could arise when the technology is 1596 being used as intended and functioning correctly, harms that could arise when the 1597 technology is being used as intended but gives incorrect results, and harms following 1598 from (intentional or unintentional) misuse of the technology.
+[865] [Normal] • If there are negative societal impacts, the authors could also discuss possible mitigation
+[866] [Normal] strategies (e.g., gated release of models, providing defenses in addition to attacks,
+[867] [Normal] mechanisms for monitoring misuse, mechanisms to monitor how a system learns from 1602	feedback over time, improving the efficiency and accessibility of ML).
+[868] [Normal] 11. Safeguards
+[869] [Normal] Question: Does the paper describe safeguards that have been put in place for responsible 1605	release of data or models that have a high risk for misuse (e.g., pre-trained language models, 1606	image generators, or scraped datasets)?
+[870] [Normal] Answer: [N/A]
+[871] [Normal] Justification: The paper does not release pretrained models, generative systems, or high-
+[872] [Normal] risk scraped datasets; the released artifacts are code and benchmark-level metadata for 1610	reproducible analysis.
+[873] [Normal] Guidelines:
+[874] [Normal] • The answer [N/A] means that the paper poses no such risks.
+[875] [Normal] • Released models that have a high risk for misuse or dual-use should be released with 1614 necessary safeguards to allow for controlled use of the model, for example by requiring 1615 that users adhere to usage guidelines or restrictions to access the model or implementing
+[876] [Normal] safety filters.
+[877] [Normal] • Datasets that have been scraped from the Internet could pose safety risks. The authors 1618	should describe how they avoided releasing unsafe images.
+[878] [Normal] 1619 • We recognize that providing effective safeguards is challenging, and many papers do 1620 not require this, but we encourage authors to take this into account and make a best
+[879] [Normal] faith effort.
+[880] [Normal] 12. Licenses for existing assets
+[881] [Normal] Question: Are the creators or original owners of assets (e.g., code, data, models), used in 1624	the paper, properly credited and are the license and terms of use explicitly mentioned and 1625	properly respected?
+[882] [Normal] Answer: [Yes]
+[883] [Normal] Justification: All mentioned model technical reports and benchmarks are properly credited.
+[884] [Normal] Guidelines:
+[885] [Normal] • The answer [N/A] means that the paper does not use existing assets.
+[886] [Normal] • The authors should cite the original paper that produced the code package or dataset. 1631	• The authors should state which version of the asset is used and, if possible, include a
+[887] [Normal] URL.
+[888] [Normal] • The name of the license (e.g., CC-BY 4.0) should be included for each asset.
+[889] [Normal] • For scraped data from a particular source (e.g., website), the copyright and terms of 1635 service of that source should be provided.
+[890] [Normal] 1636 • If assets are released, the license, copyright information, and terms of use in the 1637 package should be provided. For popular datasets, paperswithcode.com/datasets 1638 has curated licenses for some datasets. Their licensing guide can help determine the 1639 license of a dataset.
+[891] [Normal] 1640	• For existing datasets that are re-packaged, both the original license and the license of 1641	the derived asset (if it has changed) should be provided.
+[892] [Normal] 1642	• If this information is not available online, the authors are encouraged to reach out to 1643	the asset’s creators.
+[893] [Normal] 13. New assets
+[894] [Normal] Question: Are new assets introduced in the paper well documented and is the documentation 1646 provided alongside the assets?
+[895] [Normal] Answer: [Yes]
+[896] [Normal] Justification: The paper releases new analysis code and benchmark metadata through 1649 the anonymous repository, with the construction and validation procedure documented in 1650 Section 3 and Appendix E.
+[897] [Normal] Guidelines:
+[898] [Normal] • The answer [N/A] means that the paper does not release new assets.
+[899] [Normal] • Researchers should communicate the details of the dataset/code/model as part of their 1654 submissions via structured templates. This includes details about training, license,
+[900] [Normal] limitations, etc.
+[901] [Normal] • The paper should discuss whether and how consent was obtained from people whose
+[902] [Normal] asset is used.
+[903] [Normal] • At submission time, remember to anonymize your assets (if applicable). You can either 1659	create an anonymized URL or include an anonymized zip file.
+[904] [Normal] 14. Crowdsourcing and research with human subjects
+[905] [Normal] Question: For crowdsourcing experiments and research with human subjects, does the paper 1662	include the full text of instructions given to participants and screenshots, if applicable, as 1663	well as details about compensation (if any)?
+[906] [Normal] Answer: [N/A]
+[907] [Normal] Justification: The paper does not involve crowdsourcing, user studies, or research with 1666	human subjects.
+[908] [Normal] Guidelines:
+[909] [Normal] • The answer [N/A] means that the paper does not involve crowdsourcing nor research 1669	with human subjects.
+[910] [Normal] • Including this information in the supplemental material is fine, but if the main contribu-
+[911] [Normal] tion of the paper involves human subjects, then as much detail as possible should be 1672	included in the main paper.
+[912] [Normal] • According to the NeurIPS Code of Ethics, workers involved in data collection, curation,
+[913] [Normal] or other labor should be paid at least the minimum wage in the country of the data
+[914] [Normal] collector.
+[915] [Normal] 15. Institutional review board (IRB) approvals or equivalent for research with human
+[916] [Normal] subjects
+[917] [Normal] Question: Does the paper describe potential risks incurred by study participants, whether
+[918] [Normal] such risks were disclosed to the subjects, and whether Institutional Review Board (IRB)
+[919] [Normal] approvals (or an equivalent approval/review based on the requirements of your country or 1681	institution) were obtained?
+[920] [Normal] Answer: [N/A]
+[921] [Normal] Justification: The paper does not involve human subjects, so IRB approval or equivalent 1684 review is not applicable.
+[922] [Normal] Guidelines:
+[923] [Normal] • The answer [N/A] means that the paper does not involve crowdsourcing nor research 1687	with human subjects.
+[924] [Normal] • Depending on the country in which research is conducted, IRB approval (or equivalent)
+[925] [Normal] may be required for any human subjects research. If you obtained IRB approval, you 1690	should clearly state this in the paper.
+[926] [Normal] 1691	• We recognize that the procedures for this may vary significantly between institutions 1692	and locations, and we expect authors to adhere to the NeurIPS Code of Ethics and the 1693	guidelines for their institution.
+[927] [Normal] 1694	• For initial submissions, do not include any information that would break anonymity (if 1695	applicable), such as the institution conducting the review.
+[928] [Normal] 16. Declaration of LLM usage
+[929] [Normal] Question: Does the paper describe the usage of LLMs if it is an important, original, or 1698 non-standard component of the core methods in this research? Note that if the LLM is used 1699 only for writing, editing, or formatting purposes and does not impact the core methodology, 1700 scientific rigor, or originality of the research, declaration is not required.
+[930] [Normal] Answer: [Yes]
+[931] [Normal] Justification: The core methodology does not use LLMs as an important, original, or 1703 non-standard component; LLMs are only the objects of benchmark analysis in this study.
+[932] [Normal] Guidelines:
+[933] [Normal] • The answer [N/A] means that the core method development in this research does not 1706	involve LLMs as any important, original, or non-standard components.
+[934] [Normal] • Please refer to our LLM policy in the NeurIPS handbook for what should or should not
+[935] [Normal] be described.

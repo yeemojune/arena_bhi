@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BenchMark Arena · Benchmark Health Index</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <style>
 :root {
   --primary: #1E2A5D; --primary-light: #2D4A8E; --accent: #4A6FA5;
@@ -227,6 +228,15 @@ section { margin-bottom: 60px; }
 
       <!-- Top 10 排名表 -->
       <div id="top10Table"></div>
+
+      <!-- BHI 基准全景图 -->
+      <div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;margin:0 0 24px;">
+        <div style="padding:12px 14px;background:linear-gradient(135deg,#1E2A5D,#2D4A8E);color:white;font-weight:600;font-size:0.9rem;">
+          BHI 基准全景图
+        </div>
+        <div id="heatmapChart" style="height:640px;"></div>
+      </div>
+
     </section>
   </div>
 </div>
@@ -771,6 +781,109 @@ function renderWeights() {
 renderStats();
 renderConclusion();
 renderWeights();
+
+/* BHI 基准全景图 */
+(function() {
+  var el = document.getElementById('heatmapChart');
+  if (!el || typeof echarts === 'undefined') return;
+  var sorted = allData.map(function(d) {
+    return Object.assign({}, d, { _bhi: WEIGHTS.disc * d.s_disc + WEIGHTS.as * d.s_sat + WEIGHTS.imp * d.s_imp });
+  }).sort(function(a, b) { return b._bhi - a._bhi; });
+  var catMap = {};
+  sorted.forEach(function(d) { if (!catMap[d.category]) catMap[d.category] = []; catMap[d.category].push(d); });
+  var catColors = {
+    'Knowledge QA':'#1e40af','Agent':'#065f46','Reasoning':'#5b21b6','Code':'#991b1b',
+    'Long Context':'#92400e','Science':'#155e75','Mathematics':'#9d174d','Application':'#3730a3',
+    'Multimodal':'#9a3412','Subject':'#6b21b8','Hallucination':'#880e4f','Instruction Follow':'#1b5e20','Creation':'#01579b'
+  };
+  var dimInfo = [
+    { idx: 0, label: '区分度', color: '#3182ce', full: '能力区分度' },
+    { idx: 1, label: '抗饱和', color: '#38a169', full: '抗饱和度' },
+    { idx: 2, label: '影响力', color: '#805ad5', full: '影响力' }
+  ];
+  function barHtml(val, color, label) {
+    var w = Math.min(100, Math.max(0, val));
+    return '<div style="display:flex;align-items:center;gap:6px;margin:3px 0">' +
+      '<span style="width:36px;font-size:10px;color:#718096;text-align:right;font-weight:600">' + label + '</span>' +
+      '<div style="flex:1;height:5px;background:#edf2f7;border-radius:3px;overflow:hidden">' +
+      '<div style="width:' + w + '%;height:100%;background:' + color + ';border-radius:3px"></div>' +
+      '</div>' +
+      '<span style="width:36px;font-size:10px;color:#4a5568;text-align:right;font-variant-numeric:tabular-nums;font-weight:600">' + val.toFixed(1) + '</span>' +
+      '</div>';
+  }
+  var series = Object.keys(catMap).sort().map(function(cat) {
+    var c = catColors[cat] || '#475569';
+    return {
+      name: cat, type: 'scatter',
+      data: catMap[cat].map(function(d) {
+        return { value: [+(d.s_disc*100).toFixed(2), +(d.s_sat*100).toFixed(2), +(d.s_imp*100).toFixed(2)], name: d.name, bhi: (d._bhi*100).toFixed(2), n_models: d.n_models, category: d.category };
+      }),
+      symbolSize: function(data) { return Math.max(9, data[2] * 0.65); },
+      itemStyle: { color: c, opacity: 0.85, borderColor: 'rgba(255,255,255,0.6)', borderWidth: 0.5 },
+      emphasis: {
+        focus: 'series',
+        itemStyle: { opacity: 1, borderColor: '#fff', borderWidth: 2.5, shadowBlur: 24, shadowColor: c },
+        scale: 2.2,
+        label: { show: true, formatter: '{b}', fontSize: 11, fontWeight: 'bold', color: '#1a202c', position: 'top', distance: 8, textBorderColor: '#fff', textBorderWidth: 2 }
+      },
+      blur: { itemStyle: { opacity: 0.08 }, label: { show: false } }
+    };
+  });
+  var dpr = window.devicePixelRatio || 1;
+  var chart = echarts.init(el, null, { renderer: 'canvas', devicePixelRatio: Math.max(dpr, 2) });
+  chart.setOption({
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: 'rgba(255,255,255,0.97)',
+      borderColor: '#e2e8f0', borderWidth: 0,
+      padding: [14, 18],
+      textStyle: { color: '#1a202c', fontSize: 12, fontFamily: '-apple-system,BlinkMacSystemFont,sans-serif' },
+      extraCssText: 'border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,0.12);min-width:220px;transition:all .15s ease',
+      formatter: function(p) {
+        var cc = catColors[p.data.category] || '#475569';
+        return '<div style="margin-bottom:8px">' +
+          '<span style="font-weight:700;font-size:14px">' + p.data.name + '</span>' +
+          '<span style="display:inline-block;margin-left:8px;padding:2px 10px;border-radius:10px;background:' + cc + '18;color:' + cc + ';font-size:10px;font-weight:600;letter-spacing:0.3px">' + p.seriesName + '</span>' +
+          '</div>' +
+          '<div style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #f0f0f0">' +
+          '<span style="font-size:24px;font-weight:800;color:#1a202c;line-height:1">' + p.data.bhi + '</span>' +
+          '<span style="font-size:10px;color:#a0aec0;text-transform:uppercase;letter-spacing:1px">BHI Score</span>' +
+          '</div>' +
+          dimInfo.map(function(dim) { return barHtml(p.data.value[dim.idx], dim.color, dim.label); }).join('') +
+          '<div style="margin-top:8px;font-size:10px;color:#a0aec0">参与模型：' + p.data.n_models + '</div>';
+      }
+    },
+    legend: { type: 'scroll', bottom: 0, textStyle: { fontSize: 10 }, pageTextStyle: { fontSize: 10 }, pageIconSize: 10, itemWidth: 12, itemHeight: 12, itemGap: 8 },
+    grid: { left: 70, right: 30, top: 50, bottom: 70 },
+    xAxis: {
+      name: '能力区分度 (SDisc)', nameLocation: 'center', nameGap: 30,
+      nameTextStyle: { fontSize: 13, fontWeight: 'bold', color: '#3182ce' },
+      min: 10, max: 105,
+      splitLine: { show: true, lineStyle: { type: 'dashed', color: '#edf2f7' } },
+      axisLine: { lineStyle: { color: '#cbd5e0' } },
+      axisLabel: { color: '#4a5568' }
+    },
+    yAxis: {
+      name: '抗饱和度 (SAS)', nameLocation: 'center', nameGap: 50,
+      nameTextStyle: { fontSize: 13, fontWeight: 'bold', color: '#38a169' },
+      min: 0, max: 100,
+      splitLine: { show: true, lineStyle: { type: 'dashed', color: '#edf2f7' } },
+      axisLine: { lineStyle: { color: '#cbd5e0' } },
+      axisLabel: { color: '#4a5568' }
+    },
+    graphic: [
+      { type: 'text', right: 50, top: 60, style: { text: '高区分·高抵抗 ▸', fill: '#cbd5e0', fontSize: 11, fontWeight: 'bold' } },
+      { type: 'text', left: 80, top: 60, style: { text: '◂ 低区分·高抵抗', fill: '#cbd5e0', fontSize: 11, fontWeight: 'bold' } },
+      { type: 'text', right: 50, bottom: 85, style: { text: '高区分·低抵抗 ▸', fill: '#cbd5e0', fontSize: 11, fontWeight: 'bold' } },
+      { type: 'text', left: 80, bottom: 85, style: { text: '◂ 低区分·低抵抗', fill: '#cbd5e0', fontSize: 11, fontWeight: 'bold' } }
+    ],
+    series: series,
+    animationDuration: 800,
+    animationEasingUpdate: 'cubicInOut'
+  });
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
 </script>
 </body>
 </html>
