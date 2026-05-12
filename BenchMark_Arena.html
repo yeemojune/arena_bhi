@@ -80,7 +80,7 @@ section { margin-bottom: 60px; }
 .table-wrap { overflow-x: auto; border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 24px; }
 .table-wrap table { width: 100%; border-collapse: collapse; background: var(--card-bg); font-size: 0.9rem; }
 .table-wrap thead { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
-.table-wrap th, .table-wrap td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+.table-wrap th, .table-wrap td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
 .table-wrap th { font-weight: 600; white-space: nowrap; }
 .table-wrap tbody tr:hover { background: #f0f7ff; }
 .rank-1 { color: #c05621; font-weight: 700; }
@@ -141,7 +141,7 @@ section { margin-bottom: 60px; }
 <!-- HERO -->
 <div class="hero">
   <h1>BenchMark Arena</h1>
-  <p class="subtitle">基于 BHI 框架，BenchMark Arena 通过大规模系统性对抗评测，沿能力区分度、抗饱和度与影响力三个正交维度对 LLM 评测基准进行量化诊断，揭示基准的分辨效力、结构耐久性与生态采纳度。</p>
+  <p class="subtitle">基于BHI 指数，Benchmark Arena定期通过大规模系统性对抗评测，从生态系统层面对基准进行横向比较和全生命周期管理，为基准选择提供可量化的依据。</p>
   <div class="badge-group">
     <span class="badge" style="border-color:#3182ce;color:#3182ce;">能力区分度</span>
     <span class="badge" style="border-color:#38a169;color:#38a169;">抗饱和度</span>
@@ -177,7 +177,7 @@ section { margin-bottom: 60px; }
             <div>
               <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px;">BHI 指数（Benchmark Health Index）</div>
               <div style="font-size:0.9rem;line-height:1.7;opacity:0.92;">
-                基于 LOBO 能力校准策略构建三个正交维度，通过 CRITIC 客观赋权合成为单一健康指数，量化评估基准的区分分辨率、结构耐久性与生态采纳度。
+                BHI 指数包含三个子维度：能力区分度（SDisc）、抗饱和度（SAS）、影响力（SImp），通过 CRITIC 客观赋权合成为单一健康指数，用于刻画基准的有效性和可用性。
               </div>
             </div>
           </div>
@@ -234,7 +234,8 @@ section { margin-bottom: 60px; }
         <div style="padding:12px 14px;background:linear-gradient(135deg,#1E2A5D,#2D4A8E);color:white;font-weight:600;font-size:0.9rem;">
           BHI 基准全景图
         </div>
-        <div id="heatmapChart" style="height:640px;"></div>
+        <div id="scatterFilter"></div>
+        <div id="heatmapChart" style="height:600px;"></div>
       </div>
 
     </section>
@@ -660,13 +661,26 @@ function renderConclusion() {
   };
   const rowHTML = (d, i, cls) => {
     const rc = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
-    return `<tr class="${cls||''}"><td class="${rc}">${i+1}</td><td><strong>${d.name}</strong></td><td>${catTag(d.category)}</td><td style="text-align:center;font-weight:600;">${d.n_models}</td><td style="text-align:center;font-weight:600;">${fmt(d.s_disc)}</td><td style="text-align:center;font-weight:600;">${fmt(d.s_sat)}</td><td style="text-align:center;font-weight:600;">${fmt(d.s_imp)}</td><td style="text-align:center;background:#faf5ff;font-weight:800;color:#6d28d9;">${fmt(d._bhiComp)}</td></tr>`;
+    return `<tr class="${cls||''}"><td class="${rc}" style="text-align:center;vertical-align:middle;">${i+1}</td><td><strong>${d.name}</strong></td><td style="vertical-align:middle;">${catTag(d.category)}</td><td style="text-align:center;font-weight:600;vertical-align:middle;">${d.n_models}</td><td style="text-align:center;font-weight:600;">${fmt(d.s_disc)}</td><td style="text-align:center;font-weight:600;">${fmt(d.s_sat)}</td><td style="text-align:center;font-weight:600;">${fmt(d.s_imp)}</td><td style="text-align:center;background:#faf5ff;font-weight:800;color:#6d28d9;">${fmt(d._bhiComp)}</td></tr>`;
+  };
+  window.filterCategory = function(cat) {
+    window._rankingFilter = cat;
+    var sel = document.getElementById('catSelect');
+    if (sel) {
+      var c = cat === '\u5168\u90E8' ? { text: '#475569' } : (categoryColors[cat] || { text: '#475569' });
+      sel.style.borderColor = c.text;
+      sel.style.color = c.text;
+    }
+    window.renderRankingBody();
   };
   window.renderRankingBody = function() {
     const tbody = document.getElementById('rankingTbody');
     if (!tbody) return;
     const { col, dir } = window._rankingSort;
-    const sorted = [...window._rankingData].sort((a, b) => {
+    let filtered = window._rankingFilter && window._rankingFilter !== '全部'
+      ? window._rankingData.filter(d => d.category === window._rankingFilter)
+      : [...window._rankingData];
+    const sorted = filtered.sort((a, b) => {
       let va, vb;
       if (col === 'bhi') { va = a._bhiComp; vb = b._bhiComp; }
       else if (col === 'disc') { va = a.s_disc; vb = b.s_disc; }
@@ -675,8 +689,10 @@ function renderConclusion() {
       else { va = a.n_models; vb = b.n_models; }
       return dir === 'desc' ? vb - va : va - vb;
     });
+    const filteredTotal = sorted.length;
     const visibleRows = sorted.slice(0, showLimit).map((d,i) => rowHTML(d,i,'')).join('');
     const hiddenRows = sorted.slice(showLimit).map((d,i) => rowHTML(d,i+showLimit,'ranking-hidden')).join('');
+    const countInfo = window._rankingFilter !== '全部' ? `<span style="font-size:11px;color:#718096;margin-left:8px;">${filteredTotal} 个基准</span>` : '';
     const btnStyle = 'padding:6px 22px;border:2px solid #e2e8f0;border-radius:8px;background:#fff;color:#4a5568;font-size:13px;font-weight:600;cursor:pointer;';
     const hov = 'onmouseover="this.style.borderColor=\'#667eea\';this.style.color=\'#667eea\';" onmouseout="this.style.borderColor=\'#e2e8f0\';this.style.color=\'#4a5568\';"';
     const expandRow = `<tr id="expandRow"><td colspan="8" style="text-align:center;padding:14px 0;border:none;"><button style="${btnStyle}" ${hov} onclick="window.toggleFullRanking()">查看完整数据 ▾</button></td></tr>`;
@@ -704,8 +720,18 @@ function renderConclusion() {
     }
     window.renderRankingBody();
   };
+  window._rankingFilter = '全部';
+  const allCats = ['全部', ...Object.keys(categoryColors)];
+  var selectOpts = allCats.map(function(cat) {
+    var label = cat === '\u5168\u90E8' ? '\u5168\u90E8' : cat;
+    var selected = cat === '\u5168\u90E8' ? ' selected' : '';
+    return '<option value="' + cat + '"' + selected + '>' + label + '</option>';
+  }).join('');
+  var filterBar = '<div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:8px;"><label style="font-size:12px;color:#718096;margin-right:6px;">类别筛选</label><select id="catSelect" onchange="window.filterCategory(this.value)" style="padding:4px 28px 4px 10px;border-radius:8px;border:1.5px solid #475569;background:#fff;color:#475569;font-size:12px;font-weight:500;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url(\'data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"10\" height=\"6\"><path d=\"M0 0l5 6 5-6z\" fill=\"%23475569\"/></svg>\');background-repeat:no-repeat;background-position:right 8px center;outline:none;transition:all .15s ease;">' + selectOpts + '</select></div>';
+  
   const rankingHTML = `
     <div style="margin-top:0;">
+      ${filterBar}
       <div class="table-wrap"><table id="rankingTable">
         <thead><tr>
           <th>排名</th><th>基准</th><th>类别</th>
@@ -723,7 +749,7 @@ function renderConclusion() {
 
   const descEl = document.getElementById('conclusionDesc');
   const t = top10[0];
-  descEl.innerHTML = `<strong>BHI 指数排行榜</strong>：${t.name}（BHI = ${fmt(bhiValues[0])}）位列 BHI 榜单第一名。BHI 通过 CRITIC 客观赋权将能力区分度、抗饱和度、影响力三个正交维度合成为单一健康指数，将评估实践从启发式判断提升为可量化、可解释的科学程序。`;
+  descEl.innerHTML = '\u968F\u7740\u5927\u6A21\u578B\u5FEB\u901F\u8FED\u4EE3\uFF0C\u57FA\u51C6\u8BC4\u6D4B\u7684\u201C\u6807\u5C3A\u201D\u4F5C\u7528\u65E5\u76CA\u51F8\u663E\uFF0C\u5374\u4E5F\u9010\u6E10\u9762\u4E34\u533A\u5206\u5EA6\u4E0B\u964D\u3001\u6613\u9971\u548C\u4E0E\u7ED3\u679C\u4E0D\u53EF\u9760\u7B49\u6311\u6218\u3002\u4E3A\u7834\u89E3\u8FD9\u4E00\u56F0\u5883\uFF0C\u6211\u4EEC\u7CFB\u7EDF\u68B3\u7406\u4E862025\u20132026\u5E744\u6708\u95F4\u7684117\u4EFD\u4EE3\u8868\u6027LLM\u6280\u672F\u62A5\u544A\uFF0C\u5BF9\u5176\u4E2D\u6D89\u53CA\u7684158\u4E2A\u57FA\u51C6\u8FDB\u884C\u5143\u5206\u6790\uFF0C\u9996\u6B21\u63D0\u51FA\u57FA\u51C6\u5065\u5EB7\u6307\u6570\uFF08BHI\uFF09\u3002\u8BE5\u6307\u6570\u4ECE\u80FD\u529B\u533A\u5206\u5EA6\u3001\u6297\u9971\u548C\u5EA6\u3001\u793E\u533A\u5F71\u54CD\u529B\u4E09\u5927\u7EF4\u5EA6\u91CF\u5316\u57FA\u51C6\u7684\u6709\u6548\u6027\u4E0E\u751F\u547D\u5468\u671F\uFF0C\u5C06\u4F20\u7EDF\u4F9D\u8D56\u4E3B\u89C2\u7ECF\u9A8C\u7684\u8BC4\u6D4B\u9009\u62E9\uFF0C\u8F6C\u5316\u4E3A\u900F\u660E\u3001\u53EF\u89E3\u91CA\u7684\u79D1\u5B66\u6D41\u7A0B\u3002\u6211\u4EEC\u540C\u6B65\u53D1\u5E03BHI \u6307\u6570\u6392\u884C\u699C\uFF0C\u4E3A\u6A21\u578B\u7814\u53D1\u4E0E\u57FA\u51C6\u8FED\u4EE3\u63D0\u4F9B\u53EF\u8FFD\u6EAF\u7684\u53C2\u8003\u5750\u6807\u7CFB\u3002';
 }
 function renderDimCards() {
   const discEl = document.getElementById('dimCards_disc');
@@ -811,6 +837,36 @@ renderWeights();
       '<span style="width:36px;font-size:10px;color:#4a5568;text-align:right;font-variant-numeric:tabular-nums;font-weight:600">' + val.toFixed(1) + '</span>' +
       '</div>';
   }
+
+  /* Filter bar */
+  var defaultCat = 'Agent';
+  var selectedCats = {};
+  Object.keys(catMap).sort().forEach(function(cat) { selectedCats[cat] = cat === defaultCat; });
+  var filterEl = document.getElementById('scatterFilter');
+  function renderFilter() {
+    var allSelected = Object.keys(selectedCats).every(function(c) { return selectedCats[c]; });
+    var html = '<div style="display:flex;flex-wrap:nowrap;gap:5px;padding:8px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;align-items:center;overflow-x:auto;-webkit-overflow-scrolling:touch;">';
+    html += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px;border:1.5px solid ' + (allSelected ? '#475569' : '#cbd5e0') + ';background:' + (allSelected ? '#475569' : '#fff') + ';color:' + (allSelected ? '#fff' : '#718096') + ';transition:all .15s ease;white-space:nowrap;"><input type="checkbox" id="cbAll" style="display:none;" ' + (allSelected ? 'checked' : '') + '>全部</label>';
+    Object.keys(catMap).sort().forEach(function(cat) {
+      var c = catColors[cat] || '#475569';
+      var on = selectedCats[cat];
+      html += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;font-weight:500;padding:3px 10px;border-radius:8px;border:1.5px solid ' + (on ? c : '#e2e8f0') + ';background:' + (on ? c : '#fff') + ';color:' + (on ? '#fff' : c) + ';transition:all .15s ease;white-space:nowrap;"><input type="checkbox" class="cb-cat" data-cat="' + cat + '" style="display:none;" ' + (on ? 'checked' : '') + '>' + cat + '</label>';
+    });
+    html += '</div>';
+    filterEl.innerHTML = html;
+  }
+  renderFilter();
+  filterEl.addEventListener('change', function(e) {
+    if (e.target.id === 'cbAll') {
+      var on = e.target.checked;
+      Object.keys(selectedCats).forEach(function(c) { selectedCats[c] = on; });
+    } else if (e.target.classList.contains('cb-cat')) {
+      selectedCats[e.target.dataset.cat] = e.target.checked;
+    }
+    renderFilter();
+    updateChart();
+  });
+
   var series = Object.keys(catMap).sort().map(function(cat) {
     var c = catColors[cat] || '#475569';
     return {
@@ -831,6 +887,16 @@ renderWeights();
   });
   var dpr = window.devicePixelRatio || 1;
   var chart = echarts.init(el, null, { renderer: 'canvas', devicePixelRatio: Math.max(dpr, 2) });
+
+  function buildLegendSelected() {
+    var sel = {};
+    Object.keys(catMap).forEach(function(cat) { sel[cat] = !!selectedCats[cat]; });
+    return sel;
+  }
+  function updateChart() {
+    chart.setOption({ legend: { selected: buildLegendSelected() } });
+  }
+
   chart.setOption({
     tooltip: {
       trigger: 'item',
@@ -853,7 +919,7 @@ renderWeights();
           '<div style="margin-top:8px;font-size:10px;color:#a0aec0">参与模型：' + p.data.n_models + '</div>';
       }
     },
-    legend: { type: 'scroll', bottom: 0, textStyle: { fontSize: 10 }, pageTextStyle: { fontSize: 10 }, pageIconSize: 10, itemWidth: 12, itemHeight: 12, itemGap: 8 },
+    legend: { type: 'scroll', bottom: 0, textStyle: { fontSize: 10 }, pageTextStyle: { fontSize: 10 }, pageIconSize: 10, itemWidth: 12, itemHeight: 12, itemGap: 8, selected: buildLegendSelected() },
     grid: { left: 70, right: 30, top: 50, bottom: 70 },
     xAxis: {
       name: '能力区分度 (SDisc)', nameLocation: 'center', nameGap: 30,
