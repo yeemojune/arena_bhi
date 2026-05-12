@@ -156,6 +156,7 @@ section { margin-bottom: 60px; }
 <!-- TAB NAV -->
 <div class="tab-nav">
   <button class="tab-btn active" data-tab="conclusion">BHI 指数排行榜</button>
+  <button class="tab-btn" data-tab="panorama">BHI 基准全景图</button>
   <button class="tab-btn" data-tab="method">BHI 指数计算方法</button>
 </div>
 
@@ -229,6 +230,18 @@ section { margin-bottom: 60px; }
       <!-- Top 10 排名表 -->
       <div id="top10Table"></div>
 
+    </section>
+  </div>
+</div>
+
+<!-- TAB 2: BHI 基准全景图 -->
+<div class="tab-panel" id="panel-panorama">
+  <div class="container">
+    <section>
+      <div class="section-header">
+        <div class="icon" style="background:linear-gradient(135deg,#2b6cb0,#805ad5);">&#x1F30D;</div>
+        <h2>BHI 基准全景图</h2>
+      </div>
       <!-- BHI 基准全景图 -->
       <div style="background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;margin:0 0 24px;">
         <div style="padding:12px 14px;background:linear-gradient(135deg,#1E2A5D,#2D4A8E);color:white;font-weight:600;font-size:0.9rem;">
@@ -237,12 +250,11 @@ section { margin-bottom: 60px; }
         <div id="scatterFilter"></div>
         <div id="heatmapChart" style="height:600px;"></div>
       </div>
-
     </section>
   </div>
 </div>
 
-<!-- TAB 2: BHI 指数计算方法 -->
+<!-- TAB 3: BHI 指数计算方法 -->
 <div class="tab-panel" id="panel-method">
   <div class="container" style="max-width:1200px;margin:0 auto 16px;">
     <section>
@@ -494,7 +506,7 @@ window.toggleFullRanking = function() {
   if (expandRow) expandRow.style.display = isCollapsed ? 'none' : '';
   if (collapseRow) collapseRow.style.display = isCollapsed ? '' : 'none';
 };
-const renderedTabs = { conclusion: true };
+const renderedTabs = { conclusion: true, panorama: false, method: false };
 
 /* TAB SWITCHING */
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -504,6 +516,12 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     this.classList.add('active');
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('panel-' + tab).classList.add('active');
+    if (tab === 'panorama' && !renderedTabs.panorama) {
+      renderedTabs.panorama = true;
+      window.initPanorama();
+    } else if (tab === 'panorama' && window._panoramaChart) {
+      window._panoramaChart.resize();
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
@@ -808,8 +826,8 @@ renderStats();
 renderConclusion();
 renderWeights();
 
-/* BHI 基准全景图 */
-(function() {
+/* BHI 基准全景图 (lazy init) */
+window.initPanorama = function() {
   var el = document.getElementById('heatmapChart');
   if (!el || typeof echarts === 'undefined') return;
   var sorted = allData.map(function(d) {
@@ -845,12 +863,12 @@ renderWeights();
   var filterEl = document.getElementById('scatterFilter');
   function renderFilter() {
     var allSelected = Object.keys(selectedCats).every(function(c) { return selectedCats[c]; });
-    var html = '<div style="display:flex;flex-wrap:nowrap;gap:5px;padding:8px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;align-items:center;overflow-x:auto;-webkit-overflow-scrolling:touch;">';
-    html += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px;border:1.5px solid ' + (allSelected ? '#475569' : '#cbd5e0') + ';background:' + (allSelected ? '#475569' : '#fff') + ';color:' + (allSelected ? '#fff' : '#718096') + ';transition:all .15s ease;white-space:nowrap;"><input type="checkbox" id="cbAll" style="display:none;" ' + (allSelected ? 'checked' : '') + '>全部</label>';
+    var html = '<div style="display:flex;flex-wrap:nowrap;gap:3px;padding:8px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0;align-items:center;">';
+    html += '<label style="display:flex;align-items:center;cursor:pointer;font-size:10px;font-weight:600;padding:2px 6px;border-radius:6px;border:1px solid ' + (allSelected ? '#475569' : '#cbd5e0') + ';background:' + (allSelected ? '#475569' : '#fff') + ';color:' + (allSelected ? '#fff' : '#718096') + ';transition:all .15s ease;white-space:nowrap;"><input type="checkbox" id="cbAll" style="display:none;" ' + (allSelected ? 'checked' : '') + '>全部</label>';
     Object.keys(catMap).sort().forEach(function(cat) {
       var c = catColors[cat] || '#475569';
       var on = selectedCats[cat];
-      html += '<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:11px;font-weight:500;padding:3px 10px;border-radius:8px;border:1.5px solid ' + (on ? c : '#e2e8f0') + ';background:' + (on ? c : '#fff') + ';color:' + (on ? '#fff' : c) + ';transition:all .15s ease;white-space:nowrap;"><input type="checkbox" class="cb-cat" data-cat="' + cat + '" style="display:none;" ' + (on ? 'checked' : '') + '>' + cat + '</label>';
+      html += '<label style="display:flex;align-items:center;cursor:pointer;font-size:10px;font-weight:500;padding:2px 6px;border-radius:6px;border:1px solid ' + (on ? c : '#e2e8f0') + ';background:' + (on ? c : '#fff') + ';color:' + (on ? '#fff' : c) + ';transition:all .15s ease;white-space:nowrap;"><input type="checkbox" class="cb-cat" data-cat="' + cat + '" style="display:none;" ' + (on ? 'checked' : '') + '>' + cat + '</label>';
     });
     html += '</div>';
     filterEl.innerHTML = html;
@@ -875,6 +893,7 @@ renderWeights();
         return { value: [+(d.s_disc*100).toFixed(2), +(d.s_sat*100).toFixed(2), +(d.s_imp*100).toFixed(2)], name: d.name, bhi: (d._bhi*100).toFixed(2), n_models: d.n_models, category: d.category };
       }),
       symbolSize: function(data) { return Math.max(9, data[2] * 0.65); },
+      label: { show: true, formatter: '{b}', fontSize: 9, color: '#4a5568', position: 'top', distance: 4, textBorderColor: '#fff', textBorderWidth: 1.5 },
       itemStyle: { color: c, opacity: 0.85, borderColor: 'rgba(255,255,255,0.6)', borderWidth: 0.5 },
       emphasis: {
         focus: 'series',
@@ -922,7 +941,7 @@ renderWeights();
     legend: { type: 'scroll', bottom: 0, textStyle: { fontSize: 10 }, pageTextStyle: { fontSize: 10 }, pageIconSize: 10, itemWidth: 12, itemHeight: 12, itemGap: 8, selected: buildLegendSelected() },
     grid: { left: 70, right: 30, top: 50, bottom: 70 },
     xAxis: {
-      name: '能力区分度 (SDisc)', nameLocation: 'center', nameGap: 30,
+      name: '能力区分度 (SDisc) \u2192 \u6A2A\u8F74', nameLocation: 'center', nameGap: 30,
       nameTextStyle: { fontSize: 13, fontWeight: 'bold', color: '#3182ce' },
       min: 10, max: 105,
       splitLine: { show: true, lineStyle: { type: 'dashed', color: '#edf2f7' } },
@@ -930,7 +949,7 @@ renderWeights();
       axisLabel: { color: '#4a5568' }
     },
     yAxis: {
-      name: '抗饱和度 (SAS)', nameLocation: 'center', nameGap: 50,
+      name: '抗饱和度 (SAS) \u2191 \u7EB5\u8F74', nameLocation: 'center', nameGap: 50,
       nameTextStyle: { fontSize: 13, fontWeight: 'bold', color: '#38a169' },
       min: 0, max: 100,
       splitLine: { show: true, lineStyle: { type: 'dashed', color: '#edf2f7' } },
@@ -941,14 +960,19 @@ renderWeights();
       { type: 'text', right: 50, top: 60, style: { text: '高区分·高抵抗 ▸', fill: '#cbd5e0', fontSize: 11, fontWeight: 'bold' } },
       { type: 'text', left: 80, top: 60, style: { text: '◂ 低区分·高抵抗', fill: '#cbd5e0', fontSize: 11, fontWeight: 'bold' } },
       { type: 'text', right: 50, bottom: 85, style: { text: '高区分·低抵抗 ▸', fill: '#cbd5e0', fontSize: 11, fontWeight: 'bold' } },
-      { type: 'text', left: 80, bottom: 85, style: { text: '◂ 低区分·低抵抗', fill: '#cbd5e0', fontSize: 11, fontWeight: 'bold' } }
+      { type: 'text', left: 80, bottom: 85, style: { text: '◂ 低区分·低抵抗', fill: '#cbd5e0', fontSize: 11, fontWeight: 'bold' } },
+      { type: 'group', right: 30, top: 90, children: [
+        { type: 'circle', shape: { r: 6 }, style: { fill: '#805ad5', opacity: 0.7 } },
+        { type: 'text', style: { text: ' = 影响力 (SImp) \u2192 \u5708\u5927\u5C0F', x: 12, y: 0, fill: '#718096', fontSize: 10, fontWeight: '500', textAlign: 'left', textVerticalAlign: 'middle' } }
+      ] }
     ],
     series: series,
     animationDuration: 800,
     animationEasingUpdate: 'cubicInOut'
   });
-  window.addEventListener('resize', function() { chart.resize(); });
-})();
+  window._panoramaChart = chart;
+  window.addEventListener('resize', function() { if (window._panoramaChart) window._panoramaChart.resize(); });
+};
 
 </script>
 </body>
